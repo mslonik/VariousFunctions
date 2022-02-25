@@ -37,11 +37,11 @@ Short descriptions for each functions:
       - Hidden Text 
           	 1. Show -Show hidden text and special signs in Microsoft Word, by pressing {Ctrl} + *
          	 2. Hide -  Hide selected text in Microsoft Word, by pressing {Shift} + {Ctrl} + h
-      - *Hyperlink* - Add hyperlink in selected text in Microsoft Word, by pressing {Ctrl} + k
-      - *Open and Show Path* - Open "Open" window and show the path of a document in Microsoft Word, by pressing {Ctrl} + o
-      - *Strikethrough Text* - Stike selected text through, by pressing {Ctrl} + {Shift} + x
-      - *Table* -  Hotstring: After typing "tabela`t" , you receive | | |{Enter} - table in Microsoft Word
-      - *Template* 
+      - Hyperlink - Add hyperlink in selected text in Microsoft Word, by pressing {Ctrl} + k
+      - Open and Show Path - Open "Open" window and show the path of a document in Microsoft Word, by pressing {Ctrl} + o
+      - Strikethrough Text - Stike selected text through, by pressing {Ctrl} + {Shift} + x
+      - Table -  Hotstring: After typing "tabela`t" , you receive | | |{Enter} - table in Microsoft Word
+      - Template
           	 1. Add Template* - Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t
           	 2. **Template Off** - Switch off added template, by pressing {Ctrl} + {Shift} + t
 ###### Open tabs in Chrome 
