@@ -42,8 +42,8 @@ Short descriptions for each functions:
       - Strikethrough Text - Stike selected text through, by pressing {Ctrl} + {Shift} + x
       - Table -  Hotstring: After typing "tabela`t" , you receive | | |{Enter} - table in Microsoft Word
       - Template
-          	 1. Add Template* - Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t
-          	 2. **Template Off** - Switch off added template, by pressing {Ctrl} + {Shift} + t
+          	 1. Add Template - Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t
+          	 2. Template Off - Switch off added template, by pressing {Ctrl} + {Shift} + t
 ###### Open tabs in Chrome 
 	 Runs links:
 
@@ -80,7 +80,7 @@ Short descriptions for each functions:
         - Paint -  Run Paint application by pressing {Media_Play_Pause} → Multimedia keys
         - Total Commander - Run Total Commander application by pressing - {Media_Prev} → Multimedia keys
         - PrintScreen - Run applications: SnippingTool.exe, by pressing {Volume down} key → Multimedia keys. 
-			Windows Printscreen application, by pressing ***{PrintScreen}*** key.
+			Windows Printscreen application, by pressing {PrintScreen} key.
 
         https://support.microsoft.com/pl-pl/help/4488540/how-to-take-and-annotate-screenshots-on-windows-10    
 	  
@@ -90,7 +90,7 @@ Short descriptions for each functions:
 ###### Volume Up and Down
 	Turn the volume up and down, by moving a mouse wheel. Works only when a caret is over the system tray.
 ###### Window Switcher 
-	Switches between windows by pressing ***{Left Windows}*** key and **{Left Alt}*** key,
+	Switches between windows by pressing {Left Windows} key and {Left Alt} key,
 	then you can move between windows by using ← → ↑ ↓ 
 
 ![image](https://user-images.githubusercontent.com/95625092/154947268-7569504e-296a-4b22-8dad-dccce149a9e8.png)
