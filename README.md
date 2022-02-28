@@ -1,5 +1,9 @@
 # VariousFunctions
 Collection of small AutoHotkey functions. Configurable on/off.
+
+# **Warning! Warning! Warning! This script is not yet in production phase. In other words it is not yet intended for normal use. More like a stube and prospect for future** #
+
+
 Short descriptions for each functions:
 
 ###### Always on Top
