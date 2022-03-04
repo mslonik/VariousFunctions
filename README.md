@@ -73,8 +73,8 @@ Short descriptions for each functions:
 	
 ###### Power PC 
        - Suspend - Suspend, by pressing {Ctrl} + {shift} + F1
-       - Reboot - Reboot by pressing a Multimedia key - {Volume Up} or {Ctrl} + {Shift} + {F2}
-       - Shutdown - Shutdown system, by pressing a Multimedia key - {Volume Mute} or {Ctrl} + {Shift} + {F3}
+       - Reboot - Reboot by pressing a Multimedia key - {Ctrl} + {Volume Up} or {Ctrl} + {Shift} + {F2}
+       - Shutdown - Shutdown system, by pressing a Multimedia key - {Ctrl} + {Volume Mute} or {Ctrl} + {Shift} + {F3}
        
 ###### Right-click context menu -
 	Redirects AltGr -> context menu (only in English keyboardLayout)
@@ -90,7 +90,7 @@ Short descriptions for each functions:
 	  
 ###### Transparency switcher
         - Mouse - Toggle window tranparency, by moving mouse wheel and pressing {Ctrl}+{Shift}.
-        - Key - Toggle window transparency by prssing {Ctr} + {Windows} + {F9}
+        - Key - Toggle window transparency by pressing {Ctr} + {Windows} + {F9}
 ###### Volume Up and Down
 	Turn the volume up and down, by moving a mouse wheel. Works only when a caret is over the system tray.
 ###### Window Switcher 
