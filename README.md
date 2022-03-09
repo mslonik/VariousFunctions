@@ -30,7 +30,7 @@ Short descriptions for each functions:
 
 ###### Foot switch 
     - F13 - Switch windows in the system tray, by pressing {F13}
-    - F14 - Immediately resets the hotstring recognizer, by pressing {F14}
+    - F14 - Immediately reset the hotstring recognizer, by pressing {F14}
     - F15 -  Make a beep sound, by pressing {F15}
     
 ###### Functions in Microsoft Word 
@@ -49,7 +49,7 @@ Short descriptions for each functions:
           	 1. Add Template - Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t
           	 2. Template Off - Switch off added template, by pressing {Ctrl} + {Shift} + t
 ###### Open tabs in Chrome 
-	 Runs links:
+	 Run links:
 
 	 chrome.exe https://translate.google.com/
          https://www.linkedin.com/feed/
@@ -77,7 +77,7 @@ Short descriptions for each functions:
        - Shutdown - Shutdown system, by pressing a Multimedia key - {Ctrl} + {Volume Mute} or {Ctrl} + {Shift} + {F3}
        
 ###### Right-click context menu -
-	Redirects AltGr -> context menu (only in English keyboardLayout)
+	Redirect AltGr -> context menu (only in English keyboardLayout)
 ###### Run...
         - KeePass - Run the KeePass 2 application, by pressing {Shift} + {Ctrl} + k → Multimedia keys
         - Microsoft Word - Run Microsoft Word application by pressing {Media_Next} → Multimedia keys
@@ -94,7 +94,7 @@ Short descriptions for each functions:
 ###### Volume Up and Down
 	Turn the volume up and down, by moving a mouse wheel. Works only when a caret is over the system tray.
 ###### Window Switcher 
-	Switches between windows by pressing {Left Windows} key and {Left Alt} key,
+	Switch between windows by pressing {Left Windows} key and {Left Alt} key,
 	then you can move between windows by using ← → ↑ ↓ 
 
 ![image](https://user-images.githubusercontent.com/95625092/154947268-7569504e-296a-4b22-8dad-dccce149a9e8.png)
