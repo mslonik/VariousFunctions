@@ -7,7 +7,7 @@ SetWorkingDir %A_ScriptDir%		; Ensures a consistent starting directory.
 
 Menu, Tray,Icon, % A_SCriptDir . "\vh.ico" 
 
-
+#include %A_ScriptDir%\Lib\UIA_Interface.ahk
 
 ;------------------ SECTION OF GLOBAL VARIABLES: BEGINNING ---------------------------- 
 global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://www.autohotkey.com/docs/misc/Languages.htm
@@ -17,9 +17,11 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 , WordFalse 			:= 0 ; ComObj(0xB, 0) ; 0xB = VT_Bool || 0 = false
 , OurTemplateEN 		:= "S:\OrgFirma\Szablony\Word\OgolneZmakrami\TQ-S440-en_UserDoc.dotm"
 , OurTemplatePL 		:= "S:\OrgFirma\Szablony\Word\OgolneZmakrami\TQ-S440-pl_DokUzyt.dotm"
+, OurTemplateOldPL		:= "S:\OrgFirma\Szablony\Word\OgolneZmakrami\TQ-S402-pl_OgolnyTechDok.dotm"
+, OurTemplateOldEN		:= "S:\OrgFirma\Szablony\Word\OgolneZmakrami\TQ-S402-en_OgolnyTechDok.dotm"
 , OurTemplate 			:= ""
 ;---------------- Zmienne do funkcji autozapisu ----------------
-, flag_as 				:= 0
+; , flag_as 				:= 0
 , size 					:= 0
 , size_org 				:= 0
 , table					:= []
@@ -37,715 +39,1482 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 ;------------------- SECTION OF GLOBAL VARIABLES: END---------------------------- 
 
 
-#Include, *i ..\Otagle3\WarstwaWord\MakraOgolne\SetHeadersAndFooters.ahk
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\Wypunktowania.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\UsunWielokrotneSpacje.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\Refresh.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\TwardaSpacja.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\Hiperlacza.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\FindBlad.ahk
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\FindDeadLinks.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\ResizeImages.ahk 
-#Include, *i ..\Otagle3\WarstwaWord\UstawieniaDokumentu\CheckingMacro.ahk 
-
-
-SetTimer, AutoSave, % interval	;positive, the timer will automatically repeat until it is explicitly disabled by the script; counts down
-TrayTip, %A_ScriptName%, % "Autozapis dokumentów w MS Word włączony.`nAby wyłączyć tę funkcję, naciśnij kombinację klawiszy Ctrl+LewyAlt+Q.", 5, 0x1	;0x1 = Info icon
 
 ;/////////////////////////////// - INI SECTION - //////////////////////////////////////
+F_IniRead()
+
+;//////////////////////////////////////////////////////////////// - PREPARATION OF GUI ELEMENTS - //////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_PrepareGuiElements()
 
 
+;//////////////////////////////////////////////////////////////// - ACTIVATION OF SELECTED FUNCTIONS - //////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Checkbox1() ;Always on top
+F_Checkbox2() ;Automate Paint
+F_Checkbox3() ;Chrome tab switcher
+F_Checkbox4() ;Open tabs in Chrome
+F_Checkbox5() ;Parenthesis watcher
+F_Checkbox6() ;US Keyboard
+F_Checkbox7() ;Right click context menu
+F_Checkbox8() ;Volume up and down
+F_Checkbox9() ;Window switcher
+F_Checkbox10() ;Capitalization switcher CAPS LOCK
+F_Checkbox11() ;Capitalization switcher SHIFT +F3
+F_Checkbox12() ;FOOTSWITCH F13
+F_Checkbox13() ;FOOTSWITCH F14
+F_Checkbox14() ;FOOTSWITCH F15
+F_Checkbox15() ;Google translate en - pl
+F_Checkbox16() ;Google translate pl - en
+F_Checkbox17() ;Power PC suspend 
+F_Checkbox18() ;Power PC reboot
+F_Checkbox19() ;Powe PC shutdown
+F_Checkbox20() ;Transparency switcher - mouse
+F_Checkbox21() ;Transparency switcher - keys
+F_Checkbox22() ;Align left
+F_Checkbox23() ;Apply styles
+F_Checkbox24() ;Autosave
+F_Checkbox25() ;Delete line
+F_Checkbox26() ;Hide
+F_Checkbox27() ;Show
+F_Checkbox28() ;Hyperlink
+F_Checkbox29() ;Open and show path    
+F_Checkbox30() ;Strikethrough text
+F_Checkbox31() ;Table
+F_Checkbox32() ;Add template
+F_Checkbox33() ;Template off
+F_Checkbox34() ;Run KeePass
+F_Checkbox35() ;Run MS Word
+F_Checkbox36() ;Run Paint
+F_Checkbox37() ;Run Total Commander
+F_Checkbox38() ;Run print screen
+
+if (AutosaveIni)
+	F_AutoSave()
+
+;//////////////////////////////////////////////////////////////// - MENU TRAY - //////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Menu, Tray, NoStandard
+	Menu, Tray, add, 		ChooseFunctions	
+	Menu, Tray, Add 
+	Menu, Tray, Standard
+	Menu, Tray, Default, 	ChooseFunctions	;Menu, MenuName, Default [, MenuItemName]
+return	;End of initialization
+
+;////////////////////////////////////////////////////////////////////////// - GUI - /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
++^v::
+ChooseFunctions:
+	GUI, submit, Hide
+	Gui Show, w833 h512, Various functions
+Return  ;end of auto-execute section
 
 
-IniRead, ParenthesiIni, 		VariousFunctions.ini, 	Menu memory, Parenthesis, 			NO
-IniRead, BrowserIni, 			VariousFunctions.ini, 	Menu memory, Browser, 				NO
-IniRead, SetEnglishKeyboardIni, VariousFunctions.ini, 	Menu memory, Set English Keyboard, 	NO
-IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, AltGr, 				NO
-IniRead, WindowSwitcherIni, 	VariousFunctions.ini, 	Menu memory, Window `Switcher, 		NO
-IniRead, PrintScreenIni, 		VariousFunctions.ini, 	Menu memory, Print`Screen, 			NO
-IniRead, CapitalizeIni, 		VariousFunctions.ini, 	Menu memory,`Capitalize, 			NO
-IniRead, MicrosoftWordIni, 		VariousFunctions.ini, 	Menu memory, Microsoft `Word, 		NO
-IniRead, TotalCommanderIni, 	VariousFunctions.ini, 	Menu memory, Total Commander, 		NO
-IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory, Paint, 				NO
-IniRead, RebootIni, 			VariousFunctions.ini, 	Menu memory, Reboot, 				NO
-IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory, Shutdown, 				NO
-IniRead, TranspIni, 			VariousFunctions.ini, 	Menu memory, Transparency, 			NO
-IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory, F13, 					NO
-IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory, F14, 					NO
-IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory, F15, 					NO
-IniRead, TopIni,				VariousFunctions.ini, 	Menu memory, Always on top,			NO
-IniRead, KeePassIni,			VariousFunctions.ini, 	Menu memory, KeePass,				NO
-IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory, Hyperlink,				NO
-IniRead, HideIni,				VariousFunctions.ini, 	Menu memory, Hidetext,				NO
-IniRead, ShowIni,				VariousFunctions.ini, 	Menu memory, Showtext,				NO
-IniRead, AddTemplateIni,		VariousFunctions.ini, 	Menu memory, Add Template,			NO
-IniRead, TemplateOffIni,		VariousFunctions.ini, 	Menu memory, Template Off,			NO
-IniRead, StrikethroIni, 		VariousFunctions.ini,   Menu memory, Strikethrough Text,    NO
-IniRead, DeleteLineIni, 		VariousFunctions.ini,   Menu memory, Delete Line,    		NO
-IniRead, AlignLeftIni, 			VariousFunctions.ini,   Menu memory, Align Left,    		NO
-IniRead, ApplyStyleIni, 		VariousFunctions.ini,   Menu memory, Apply Styles,    		NO
-IniRead, OpenPathIni, 			VariousFunctions.ini,   Menu memory, Open and Show Path,    NO
-IniRead, TableIni, 				VariousFunctions.ini,   Menu memory, Table,    				NO
-IniRead, SuspendIni,			VariousFunctions.ini,	Menu memory, Suspend,				NO
-IniRead, VolumeIni,				VariousFunctions.ini,	Menu memory, Volume Up & Down,		NO
-IniRead, BroWinSwiIni,			VariousFunctions.ini,	Menu memory, Browser Win Switcher,	NO
-IniRead, TranspMouIni, 			VariousFunctions.ini,	Menu memory, Transparency Mouse,	NO
-IniRead, AutosaveIni, 			VariousFunctions.ini,	Menu memory, Autosave,				NO
-;/////////////////////////////// - TRAY LABEL - //////////////////////////////////////
+GuiEscape:
+; :ButtonOK
+	GUI, submit, Hide
+	Gui, Hide
+Return
 
-;~ Tray:
-;--------------------------------------------------	
-Menu, Tray, NoStandard
-;--------------------------------------------------	
-Menu, SubmenuTop, Add, Yes, TopYes
-	Menu, SubmenuTop, Add, No, TopNo
-	Menu, SubmenuTop, Add, Description, TopDesc
-Menu, Tray, Add, &Always on top (Ctrl + Windows + F8), :SubmenuTop
-if (TopIni = "NO")
-		{
-			Menu, SubmenuTop, Check, No 
-			Menu, SubmenuTop, UnCheck, Yes 
-			F_Top("No")	
-		}
-		if (TopIni = "YES")
-		{
-			Menu, SubmenuTop, Check, Yes 
-			Menu, SubmenuTop, UnCheck, No
-			F_Top("Yes")
-		}
-;--------------------------------------------------	
-Menu, SubmenuCapitalize, Add, Yes, CapitalizeYES 
-	Menu, SubmenuCapitalize, Add, No, CapitalizeNO 
-	Menu, SubmenuCapitalize, Add, Description, CapitalizeDesc
-Menu, Tray, Add, &Capitalization switcher (Shift+F3), :SubmenuCapitalize
-		if(CapitalizeIni = "NO")
-		{
-			Menu, SubmenuCapitalize, Check, No 
-			Menu, SubmenuCapitalize, UnCheck, Yes 
-			F_Capitalize("No")	
-		}
-		if (CapitalizeIni = "YES")
-		{
-			Menu, SubmenuCapitalize, Check, Yes
-			Menu, SubmenuCapitalize, UnCheck, No
-			F_Capitalize("Yes")
-		}
-;--------------------------------------------------	
-	Menu, Subbrowinswitcher, Add, Yes, Browinswiyes
-	Menu, Subbrowinswitcher, Add, No, Browinswino
-	Menu, Subbrowinswitcher, Add, Description, BrowinswiDesc
-Menu, Tray, Add, C&hrome tab switcher (Xbutton1/Xbutton2), :Subbrowinswitcher
-		if (BroWinSwiIni = "NO")
-		{
-			Menu, Subbrowinswitcher, Check, No 
-			Menu, Subbrowinswitcher, UnCheck, Yes 
-			F_BroWinSwi("No")	
-		}
-		if (BroWinSwiIni = "YES")
-		{
-			Menu, Subbrowinswitcher, Check, Yes 
-			Menu, Subbrowinswitcher, UnCheck, No
-			F_BroWinSwi("Yes")
-		}
-;--------------------------------------------------
-Menu, SubF13, Add, Yes, F13yes 
-	Menu, SubF13, Add, No, F13no
-	Menu, SubF13, Add,  Description, F13Desc 
-	Menu, SubF14, Add, Yes, F14yes 
-	Menu, SubF14, Add, No, F14no
-	Menu, SubF14, Add,  Description, F14Desc 
-	Menu, SubF15, Add, Yes, F15yes 
-	Menu, SubF15, Add, No, F15no
-	Menu, SubF15, Add,  Description, F15Desc 
-	Menu, SubmenuPedals, Add, F13, :SubF13 
-	Menu, SubmenuPedals, Add, F14, :SubF14 
-	Menu, SubmenuPedals, Add, F15, :SubF15	
-Menu, Tray, Add, &Foot switch (F13/F14/F15), :SubmenuPedals
-		if(F13Ini = "NO")
-		{
-			Menu, SubF13, Check, No 
-			Menu, SubF13, UnCheck, Yes 
-			F_F13("No")	
-		}
-		if (F13Ini = "YES")
-		{
-			Menu, SubF13, Check, Yes 
-			Menu, SubF13, UnCheck, No
-			F_F13("Yes")
-		}
-		if(F14Ini = "NO")
-		{
-			Menu, SubF14, Check, No 
-			Menu, SubF14, UnCheck, Yes 
-			F_F14("No")	
-		}
-		if (F14Ini = "YES")
-		{
-			Menu, SubF14, Check, Yes 
-			Menu, SubF14, UnCheck, No
-			F_F14("Yes")
-		}
-
-		if(F15Ini = "NO")
-		{
-			Menu, SubF15, Check, No 
-			Menu, SubF15, UnCheck, Yes 
-			F_F15("No")	
-		}
-		if (F15Ini = "YES")
-		{
-			Menu, SubF15, Check, Yes 
-			Menu, SubF15, UnCheck, No
-			F_F15("Yes")
-		}
-;--------------------------------------------------	
-;TABLE 
-	Menu, Subtable, Add, Yes, Tableyes
-	Menu, Subtable, Add, No, Tableno 
-	Menu, Subtable, Add, Description, TableDesc
-		if(TableIni = "NO")
-			{
-				Menu, Subtable, Check, No 
-				Menu, Subtable, UnCheck, Yes 
-				F_Table("No")	
-			}
-		if (TableIni = "YES")
-			{
-				Menu, Subtable, Check, Yes 
-				Menu, Subtable, UnCheck, No
-				F_Table("Yes")
-			}
-
-;OPEN AND SHOW PARTH
-	Menu, Subopenpath, Add, Yes, Openpathyes
-	Menu, Subopenpath, Add, No, Openpathno
-	Menu, Subopenpath, Add, Description, OpenpathDesc
-		if(OpenPathIni = "NO")
-			{
-				Menu, Subopenpath, Check, No 
-				Menu, Subopenpath, UnCheck, Yes 
-				F_OpenPath("No")	
-			}
-		if (OpenPathIni = "YES")
-			{
-				Menu, Subopenpath, Check, Yes 
-				Menu, Subopenpath, UnCheck, No
-				F_OpenPath("Yes")
-			}
-
-;APPY STYLES
-	Menu, Subapply, Add, Yes, Applystylesyes
-	Menu, Subapply, Add, No, Applystylesno 
-	Menu, Subapply, Add, Description, ApplystylesDesc
-		if(ApplyStyleIni = "NO")
-			{
-				Menu, Subapply, Check, No 
-				Menu, Subapply, UnCheck, Yes 
-				F_ApplyStyles("No")	
-			}
-		if (ApplyStyleIni = "YES")
-			{
-				Menu, Subapply, Check, Yes 
-				Menu, Subapply, UnCheck, No
-				F_ApplyStyles("Yes")
-			}
-
-;ALIGN LEFT 
-	Menu, Subalign, Add, Yes, Alignleftyes
-	Menu, Subalign, Add, No, Alignleftno 
-	Menu, Subalign, Add, Description, AlignleftDesc
-		if(AlignLeftIni = "NO")
-			{
-				Menu, Subalign, Check, No 
-				Menu, Subalign, UnCheck, Yes 
-				F_AlignLeft("No")	
-			}
-		if (AlignLeftIni = "YES")
-			{
-				Menu, Subalign, Check, Yes 
-				Menu, Subalign, UnCheck, No
-				F_AlignLeft("Yes")
-			}
-
-;DELETE LINE
-	Menu, Subdeleteline, Add, Yes, Deletelineyes
-	Menu, Subdeleteline, Add, No, Deletelineno 
-	Menu, Subdeleteline, Add, Description, DeletelineDesc
-		if(DeleteLineIni = "NO")
-			{
-				Menu, Subdeleteline, Check, No 
-				Menu, Subdeleteline, UnCheck, Yes 
-				F_DeleteLine("No")	
-			}
-		if (DeleteLineIni = "YES")
-			{
-				Menu, Subdeleteline, Check, Yes 
-				Menu, Subdeleteline, UnCheck, No
-				F_DeleteLine("Yes")
-			}
-
-;SHOW 
-	Menu, Subshow, Add, Yes, Showyes
-	Menu, Subshow, Add, No,  Showno
-	Menu, Subshow, Add, Description,  ShowDesc
-		if(HyperIni = "NO")
-			{
-				Menu, Subshow, Check, No 
-				Menu, Subshow, UnCheck, Yes 
-				F_Show("No")	
-			}
-		if (HyperIni = "YES")
-			{
-				Menu, Subshow, Check, Yes 
-				Menu, Subshow, UnCheck, No
-				F_Show("Yes")
-			}
-;HIDE
-	Menu, Subhide, Add, Yes, Hideyes
-	Menu, Subhide, Add, No, Hideno 
-	Menu, Subhide, Add, Description, HideDesc
-		if(HideIni = "NO")
-		{
-			Menu, Subhide, Check, No 
-			Menu, Subhide, UnCheck, Yes 
-			F_Hide("No")	
-		}
-		if (HideIni = "YES")
-		{
-			Menu, Subhide, Check, Yes 
-			Menu, Subhide, UnCheck, No
-			F_Hide("Yes")
-		}
-
-;HYPERLINKS
-	Menu, Subhyper, Add, Yes, Hyperyes 
-	Menu, Subhyper, Add, No, Hyperno
-	Menu, Subhyper, Add,  Description, HyperDesc 
-		if(HyperIni = "NO")
-		{
-			Menu, Subhyper, Check, No 
-			Menu, Subhyper, UnCheck, Yes 
-			F_Hyper("No")	
-		}
-		if (HyperIni = "YES")
-		{
-			Menu, Subhyper, Check, Yes 
-			Menu, Subhyper, UnCheck, No
-			F_Hyper("Yes")
-		}
-
-	Menu, Subhidden, Add, Show, :Subshow
-	Menu, Subhidden, Add, Hide, :Subhide
-
-;ADD TEMPLATE
-	Menu, Subaddtemplate, Add, Yes, AddTemplateyes 
-	Menu, Subaddtemplate, Add, No, AddTemplateno
-	Menu, Subaddtemplate, Add,  Description, AddTemplateDesc 
-		if(AddTemplateIni = "NO")
-		{
-			Menu, Subaddtemplate, Check, No 
-			Menu, Subaddtemplate, UnCheck, Yes 
-			F_AddTemplate("No")	
-		}
-		if (AddTemplateIni = "YES")
-		{
-			Menu, Subaddtemplate, Check, Yes 
-			Menu, Subaddtemplate, UnCheck, No
-			F_AddTemplate("Yes")
-		}
-
-;TEMPLATE OFF
-	Menu, Subtemplateoff, Add, Yes, Templateoffyes 
-	Menu, Subtemplateoff, Add, No, Templateoffno
-	Menu, Subtemplateoff, Add,  Description, TemplateoffDesc 
-		if(TemplateOffIni = "NO")
-		{
-			Menu, Subtemplateoff, Check, No 
-			Menu, Subtemplateoff, UnCheck, Yes 
-			F_TemplateOff("No")	
-		}
-		if (TemplateOffIni = "YES")
-		{
-			Menu, Subtemplateoff, Check, Yes 
-			Menu, Subtemplateoff, UnCheck, No
-			F_TemplateOff("Yes")
-		}
-
-;AUTOSAVE
-	Menu, Subautosave, Add, Yes, Autosaveyes
-	Menu, Subautosave, Add, No, Autosaveno
-	Menu, Subautosave, Add, Description, AutosaveDesc
-		if (AutosaveIni = "NO")
-		{
-			Menu, Subautosave, Check, No 
-			Menu, Subautosave, UnCheck, Yes 
-			F_Autosave("No")	
-		}
-		if (AutosaveIni = "YES")
-		{
-			Menu, Subautosave, Check, Yes 
-			Menu, Subautosave, UnCheck, No
-			F_Autosave("Yes")
-		}
-
-
-	Menu, Subtemplate, Add, Add Template, :Subaddtemplate
-	Menu, Subtemplate, Add, Template Off, :Subtemplateoff
-
-
-	Menu, Substrikethro, Add, Yes, Strikethroyes
-	Menu, Substrikethro, Add, No, Strikethrono 
-	Menu, Substrikethro, Add, Description, StrikethroDesc 
-	if(StrikethroIni = "NO")
-		{
-			Menu, Substrikethro, Check, No 
-			Menu, Substrikethro, UnCheck, Yes 
-			F_Strikethrough("No")	
-		}
-		if (StrikethroIni = "YES")
-		{
-			Menu, Substrikethro, Check, Yes 
-			Menu, Substrikethro, UnCheck, No
-			F_Strikethrough("Yes")
-		}
-
-	Menu, SubmenuWord, Add, Align Left, :Subalign
-	Menu, SubmenuWord, Add, Apply Styles, :Subapply
-	Menu, SubmenuWord, Add, Autosave, :Subautosave
-	Menu, SubmenuWord, Add, Delete Line, :Subdeleteline
-	Menu, SubmenuWord, Add, Hidden text, :Subhidden 
-	Menu, SubmenuWord, Add, Hyperlink, :Subhyper
-	Menu, SubmenuWord, Add, Open and Show Path, :Subopenpath
-	Menu, SubmenuWord, Add, Strikethrough Text, :Substrikethro
-	Menu, SubmenuWord, Add, Table, :Subtable
-	Menu, SubmenuWord, Add, Template, :Subtemplate
-Menu, Tray, Add, F&unctions in MSWord, :SubmenuWord
-;--------------------------------------------------	
-Menu, SubmenuBrowser, Add, Yes, BrowserYes
-	Menu, SubmenuBrowser, Add, No, BrowserNo
-	Menu, SubmenuBrowser, Add, Description, BrowserDesc 	
-Menu, Tray, Add, &Open tabs in Chrome, :SubmenuBrowser
-		if(BrowserIni = "NO")
-		{
-			Menu, SubmenuBrowser, Check, No 
-			Menu, SubmenuBrowser, UnCheck, Yes 
-			F_BrowserMenu("No")
-		}
-		if (BrowserIni = "YES")
-		{
-			Menu, SubmenuBrowser, Check, Yes
-			Menu, SubmenuBrowser, UnCheck, No
-			F_BrowserMenu("Yes")
-		}
-;--------------------------------------------------	
-Menu, SubmenuParenthesis, Add, Yes, ParenthesisYes 
-	Menu, SubmenuParenthesis, Add, No, ParenthesisNo
-	Menu, SubmenuParenthesis, Add, Description, ParenthesisDesc 
-Menu, Tray, Add, &Parenthesis watcher, :SubmenuParenthesis 
-		if(ParenthesiIni = "NO")
-		{
-			Menu, SubmenuParenthesis, Check, No 
-			Menu, SubmenuParenthesis, UnCheck, Yes 
-			F_ParenthesisMenu("No")	
-		}
-		if (ParenthesiIni = "YES")
-		{
-			Menu, SubmenuParenthesis, Check, Yes 
-			Menu, SubmenuParenthesis, UnCheck, No
-			F_ParenthesisMenu("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuSetEngKeyboard, Add, Yes, SetEngKeyboardYES
-	Menu, SubmenuSetEngKeyboard, Add, No, SetEngKeyboardNO
-	Menu, SubmenuSetEngKeyboard, Add, Description, SetEngKeyboardDesc				
-Menu, Tray, Add, Po&lish/US keyboard switcher, :SubmenuSetEngKeyboard
-		if(SetEnglishKeyboardIni = "NO")
-		{
-			Menu, SubmenuSetEngKeyboard, Check, No 
-			Menu, SubmenuSetEngKeyboard, UnCheck, Yes 
-			F_SetEngKeyboardMenu("No")	
-		}
-		if (SetEnglishKeyboardIni = "YES")
-		{
-			Menu, SubmenuSetEngKeyboard, Check, Yes
-			Menu, SubmenuSetEngKeyboard, UnCheck, No
-			F_SetEngKeyboardMenu("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuSuspend, Add, Yes, SuspendYes
-	Menu, SubmenuSuspend, Add, No, SuspendNo
-	Menu, SubmenuSuspend, Add, Description, SuspendDesc
-Menu, submenupower, Add, &Suspend (Ctrl + Shift + F1), :SubmenuSuspend
-		if(SuspendIni = "NO")
-		{
-			Menu, SubmenuSuspend, Check, No 
-			Menu, SubmenuSuspend, UnCheck, Yes 
-			F_Suspend("No")	
-		}
-		if (SuspendIni = "YES")
-		{
-			Menu, SubmenuSuspend, Check, Yes 
-			Menu, SubmenuSuspend, UnCheck, No
-			F_Suspend("Yes")
-		}
-;--------------------------------------------------	
-	Menu, SubmenuReboot, Add, Yes, RebootYES
-	Menu, SubmenuReboot, Add, No, RebootNO 
-	Menu, SubmenuReboot, Add, Description, RebootDesc
-Menu, submenupower, Add, R&eboot (Ctrl+Volume_Up or Ctr+Shift+F2), :SubmenuReboot
-		if(RebootIni = "NO")
-		{
-			Menu, SubmenuReboot, Check, No 
-			Menu, SubmenuReboot, UnCheck, Yes 
-			F_Reboot("No")	
-		}
-		if (RebootIni = "YES")
-		{
-			Menu, SubmenuReboot, Check, Yes
-			Menu, SubmenuReboot, UnCheck, No
-			F_Reboot("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuShutdown, Add, Yes, ShutdownYES
-	Menu, SubmenuShutdown, Add, No, ShutdownNO 
-	Menu, SubmenuShutdown, Add, Description, ShutdownDesc 
-Menu, submenupower, Add, Sh&utdown and Power down (Ctrl+Volume_Mute or Ctrl+Shift+F3), :SubmenuShutdown
-		if(ShutdownIni = "NO")
-		{
-			Menu, SubmenuShutdown, Check, No 
-			Menu, SubmenuShutdown, UnCheck, Yes 
-			F_Shutdown("No")	
-		}
-		if (ShutdownIni = "YES")
-		{
-			Menu, SubmenuShutdown, Check, Yes
-			Menu, SubmenuShutdown, UnCheck, No
-			F_Shutdown("Yes")
-		}
-;--------------------------------------------------
-Menu, Tray, Add, Po&wer PC, :submenupower
-;--------------------------------------------------
-	Menu, SubmenuAltGr, Add, Yes, AltGrYES
-	Menu, SubmenuAltGr, Add, No, AltGrNO
-	Menu, SubmenuAltGr, Add, Description, AltGrDesc
-Menu, Tray, Add, &Right-click context menu (AltGr), :SubmenuALtGr
-		if(AltGrIni = "NO")
-		{
-			Menu, SubmenuAltGr, Check, No 
-			Menu, SubmenuAltGr, UnCheck, Yes 
-			F_AltGr("No")	
-		}
-		if (AltGrIni = "YES")
-		{
-			Menu, SubmenuAltGr, Check, Yes
-			Menu, SubmenuAltGr, UnCheck, No
-			F_AltGr("Yes")
-		}
-;--------------------------------------------------
-Menu, SubmenuKeepass, Add, Yes, KeepassYes
-	Menu, SubmenuKeepass, Add, No, KeepassNo
-	Menu, SubmenuKeepass, Add, Description, KeepassDesc
-Menu,submenurun, Add, &KeePass (Ctrl + Shift + k), :SubmenuKeepass
-		if(KeePassIni = "NO")
-		{
-			Menu, SubmenuKeepass, Check, No 
-			Menu, SubmenuKeepass, UnCheck, Yes 
-			F_KeePass("No")	
-		}
-		if (KeePassIni = "YES")
-		{
-			Menu, SubmenuKeepass, Check, Yes 
-			Menu, SubmenuKeepass, UnCheck, No
-			F_KeePass("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuMcsWord, Add, Yes, McsWordYES
-	Menu, SubmenuMcsWord, Add, No, McsWordNO 
-	Menu, SubmenuMcsWord, Add, Description, McsWordDesc 
-Menu, submenurun, Add, &Microsoft `Word (Media_Next), :SubmenuMcsWord 
-		if(MicrosoftWordIni = "NO")
-		{
-			Menu, SubmenuMcsWord, Check, No 
-			Menu, SubmenuMcsWord, UnCheck, Yes 
-			F_McsWord("No")	
-		}
-		if (MicrosoftWordIni = "YES")
-		{
-			Menu, SubmenuMcsWord, Check, Yes
-			Menu, SubmenuMcsWord, UnCheck, No
-			F_McsWord("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuPaint, Add, Yes, PaintYES
-	Menu, SubmenuPaint, Add, No, PaintNO 
-	Menu, SubmenuPaint, Add, Description, PaintDesc 
-Menu, submenurun, Add, `Pai&nt (Media_Play_Pause), :SubmenuPaint
-		if(PaintIni = "NO")
-		{
-			Menu, SubmenuPaint, Check, No 
-			Menu, SubmenuPaint, UnCheck, Yes 
-			F_Paint("No")	
-		}
-		if (PaintIni = "YES")
-		{
-			Menu, SubmenuPaint, Check, Yes
-			Menu, SubmenuPaint, UnCheck, No
-			F_Paint("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuTotCom, Add, Yes, TotComYES
-	Menu, SubmenuTotCom, Add, No, TotComNO 
-	Menu, SubmenuTotCom, Add, Description, TotComDesc 
-Menu, submenurun, Add, Total `Comman&der (Media_Prev), :SubmenuTotCom
-		if(TotalCommanderIni = "NO")
-		{
-			Menu, SubmenuTotCom, Check, No 
-			Menu, SubmenuTotCom, UnCheck, Yes 
-			F_TotalCommander("No")	
-		}
-		if (TotalCommanderIni = "YES")
-		{
-			Menu, SubmenuTotCom, Check, Yes
-			Menu, SubmenuTotCom, UnCheck, No
-			F_TotalCommander("Yes")
-		}
-;--------------------------------------------------
-	Menu, SubmenuPrintScreen, Add, Yes, PrintScreenYES 
-	Menu, SubmenuPrintScreen, Add, No, PrintScreenNO 
-	Menu, SubmenuPrintScreen, Add, Description, PrintScreenDesc 
-Menu, submenurun, Add, Pr&int`Screen (PrintScreen/Volume Down) , :SubmenuPrintScreen
-		if(PrintScreenIni = "NO")
-		{
-			Menu, SubmenuPrintScreen, Check, No 
-			Menu, SubmenuPrintScreen, UnCheck, Yes 
-			F_PrintScreen("No")	
-		}
-		if (PrintScreenIni = "YES")
-		{
-			Menu, SubmenuPrintScreen, Check, Yes
-			Menu, SubmenuPrintScreen, UnCheck, No
-			F_PrintScreen("Yes")
-		}
-Menu, Tray, Add, Ru&n..., :submenurun
-;--------------------------------------------------		
-	Menu, Submenukeys, Add, Yes, TranspYes
-	Menu, Submenukeys, Add, No, TranspNo
-	Menu, Submenukeys, Add, Description, TranspDesc
-		if(TranspIni = "NO")
-		{
-			Menu, Submenukeys, Check, No 
-			Menu, Submenukeys, UnCheck, Yes 
-			F_Transparency("No")	
-		}
-		if (TranspIni = "YES")
-		{
-			Menu, Submenukeys, Check, Yes 
-			Menu, Submenukeys, UnCheck, No
-			F_Transparency("Yes")
-		}
-
-	Menu, Submenumouse, Add, Yes, Mouseyes
-	Menu, Submenumouse, Add, No, Mouseno
-	Menu, Submenumouse, Add, Description, MouseDesc 
-		if(TranspMouIni = "NO")
-		{
-			Menu, Submenumouse, Check, No 
-			Menu, Submenumouse, UnCheck, Yes 
-			F_TransparencyMou("No")	
-		}
-		if (TranspMouIni = "YES")
-		{
-			Menu, Submenumouse, Check, Yes 
-			Menu, Submenumouse, UnCheck, No
-			F_TransparencyMou("Yes")
-		}
-		
-	Menu, SubmenuTransp, Add, Mouse, :Submenumouse
-	Menu, SubmenuTransp, Add, Keys, :Submenukeys 
-Menu, Tray, Add, &Transparency switcher, :SubmenuTransp
-;--------------------------------------------------	
-	Menu, Subvolume, Add, Yes, Volumeyes
-	Menu, Subvolume, Add, No, Volumeno
-	Menu, Subvolume, Add, Description, VolumeDesc
-Menu, Tray, Add, &Volume Up And Down (MouseWheel), :Subvolume
-		if (VolumeIni = "NO")
-		{
-			Menu, Subvolume, Check, No 
-			Menu, Subvolume, UnCheck, Yes 
-			F_Volume("No")	
-		}
-		if (VolumeIni = "YES")
-		{
-			Menu, Subvolume, Check, Yes 
-			Menu, Subvolume, UnCheck, No
-			F_Volume("Yes")
-		}
-;--------------------------------------------------	
-	Menu, SubmenuWindowSwitcher, Add, Yes, WindowSwitcherYES
-	Menu, SubmenuWindowSwitcher, Add, No, WindowSwitcherNO 
-	Menu, SubmenuWindowSwitcher, Add, Description, WindowSwitcherDesc
-Menu, Tray, Add, Win&dow Switcher (LWin and LAlt), :SubmenuWindowSwitcher
-		if(WindowSwitcherIni = "NO")
-		{
-			Menu, SubmenuWindowSwitcher, Check, No 
-			Menu, SubmenuWindowSwitcher, UnCheck, Yes 
-			F_WindowSwitcher("No")	
-		}
-		if (WindowSwitcherIni = "YES")
-		{
-			Menu, SubmenuWindowSwitcher, Check, Yes
-			Menu, SubmenuWindowSwitcher, UnCheck, No
-			F_WindowSwitcher("Yes")
-		}
-;--------------------------------------------------
-Menu, Tray, Add 
-Menu, Tray, Add, About
-;--------------------------------------------------
-Menu, Tray, Add 
-Menu, Tray, Standard
-return
-;///////////////////////////////// - MENU LABELS - //////////////////////////////////////
-About:
-MsgBox, Authors: Maciej Slojewski, Hanna Zietak, Jakub Masiak    		Version: 1.1.1
-return
-;--------------------------------------------------
-TurnOffTooltip:
-	ToolTip ,
-return
-;--------------------------------------------------
-
-Autosaveyes:
-	Menu,Subautosave, Check, Yes 
-	Menu, Subautosave, Uncheck, No 
-	F_Autosave("Yes")
-return
-
-Autosaveno:
-	Menu, Subautosave, Check, No 
-	Menu, Subautosave, Uncheck, Yes
-	F_Autosave("No")
-return
-
-AutosaveDesc:
-	Msgbox, Toggle autosave function, by pressing (LCtrl + LAlt + q)
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subautosave, Check, Yes 
-		Menu, Subautosave, UnCheck, No 
-		F_Autosave("Yes")
-		}
-		else, 
-		{
-		Menu, Subautosave, Check, No
-		Menu, Subautosave, UnCheck, Yes  
-		F_Autosave("No")
-		}
-return
-
-AutoSave:
+;////////////////////////////////////////////////////////////////// - ABOUT - ///////////////////////////////////////////
+F_About1()
 {
-	init := InitAutosaveFilePath(AutosaveFilePath)
+	Gui, submit, NoHide
+	MsgBox,
+		(
+Authors:`nMaciej Słojewski, Hanna Ziętak, Jakub Masiak, Kasandra Krajewska`n`nInterface Author:`nKasandra Krajewska`n`nVersion: 1.1.2
+				)
+Return
+}
+
+;//////////////////////////////////////////////////////////////////// - ALWAYS ON TOP (1) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button1() 
+{
+	Gui, submit, NoHide
+	Msgbox, 
+				(
+Toggle window parameter always on top, by pressing {Ctrl} + {Windows} + {F8}.
+				)
+Return
+}
+
+
+F_Checkbox1()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	; Switch TopIni ;0, 1, -1
+	Switch Check1 ;0, 1, -1
+	{
+		Case 0:
+			Hotkey, ^#F8, F_always, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Always on top
+
+        Case 1:
+			Hotkey, ^#F8, F_always, on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Always on top
+	}
+}
+
+F_always()
+{
+    static OnOffToggle := false
+
+	WinSet, AlwaysOnTop, toggle, A
+    OnOffToggle := !OnOffToggle
+    WinGetTitle, OutputVar, A
+    MsgBox, 4096, % A_ScriptName . ":" . A_Space . "information", % "Changed AlwaysOnTop feature for the following window:" . "`n" . OutputVar . A_Space . "to:" . A_Space . (OnOffToggle ? "true" : "false")
+    Return
+}
+
+;/////////////////////////////////////////////////////////////////// - AUTOMATE PAINT (2)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button2()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+Rotate image by pressing F2, 
+resize image by pressing F3, 
+choose red rectangle by pressing F4, 
+"save as" by pressing F5.
+				)
+}
+
+F_Checkbox2()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check2 ;0, 1, -1
+		{
+			Case 0:
+				Hotkey, IfWinActive, AHK_class MSPaintApp
+				Hotkey, F2, F_rotate, off
+				Hotkey, F3, F_resize, off
+				Hotkey, F4, F_choose, off 
+				Hotkey, F5, F_saveas, off
+				Hotkey, +/, F_GUI, off
+				Hotkey, IfWinActive
+				IniWrite, NO, VariousFunctions.ini, Menu memory, AutomatePaint
+
+			Case 1:
+				Hotkey, IfWinActive, AHK_class MSPaintApp
+				Hotkey, F2, F_rotate, on 
+				Hotkey, F3, F_resize, on 
+				Hotkey, F4, F_choose, on 
+				Hotkey, F5, F_saveas, on  
+				Hotkey, +/, F_GUI, on
+				Hotkey, IfWinActive
+				IniWrite, YES, VariousFunctions.ini, Menu memory, AutomatePaint	
+		}
+}
+
+	F_rotate()
+	{
+		UIA 		:= UIA_Interface() ; Initialize UIA interface
+		WinWaitActive, ahk_exe mspaint.exe
+		paint1 		:= UIA.ElementFromHandle(WinExist("ahk_exe mspaint.exe"))
+
+		paint1.FindFirstByNameAndType("Obróć", "SplitButton").Click() 
+		paint1.WaitElementExistByName("Obrót w prawo o 90°").Click()
+		UIA 		:= ""
+	,	paint1 		:= ""
+	}
+
+	F_resize()
+	{
+		UIA 		:= UIA_Interface() ; Initialize UIA interface
+		WinWaitActive, ahk_exe mspaint.exe
+		paint1 		:= UIA.ElementFromHandle(WinExist("ahk_exe mspaint.exe"))
+
+		paint1.FindFirstByNameAndType("Zmień rozmiar", "Button").Click() 
+		paint1.WaitElementExistByNameandType("Piksele","RadioButton").Click()
+		paint1.FindFirstByNameandType("Zmień rozmiar w poziomie","Edit").SetValue("800")
+		paint1.FindFirstByNameandType("OK","Button").Click()
+		UIA 		:= ""
+	,	paint1 		:= ""
+	}
+
+	F_choose()
+	{
+		UIA 		:= UIA_Interface() ; Initialize UIA interface
+		WinWaitActive, ahk_exe mspaint.exe
+		paint1 		:= UIA.ElementFromHandle(WinExist("ahk_exe mspaint.exe"))
+
+		paint1.FindFirstByNameAndType("Kształty", "Button").Click() ;in polish language version 
+		paint1.WaitElementExistByName("Zaokrąglony prostokąt").Click()
+		Sleep,50
+		paint1.FindFirstByNameAndType("Edytuj kolory", "Button").Click() 
+		paint1.FindFirstByNameandType("Odc.:","Edit").SetValue(0)
+		paint1.FindFirstByNameandType("Nas.:","Edit").SetValue(240)
+		paint1.FindFirstByNameandType("Jaskr.:","Edit").SetValue(120)
+		paint1.FindFirstByNameandType("Czerw.:","Edit").SetValue(255)
+		paint1.FindFirstByNameandType("OK","Button").Click()
+		UIA 		:= ""
+	,	paint1 		:= ""	
+	}
+
+	F_saveas()
+	{
+		UIA 		:= UIA_Interface() ; Initialize UIA interface
+		WinWaitActive, ahk_exe mspaint.exe
+		paint1 		:= UIA.ElementFromHandle(WinExist("ahk_exe mspaint.exe"))
+
+		paint1.FindFirstByNameAndType("Karta Plik", "Button").Click() 
+		paint1.WaitElementExistByNameandType("Zapisz jako", "SplitButton").Click()
+		UIA 		:= ""
+	,	paint1 		:= ""
+	}
+
+	F_GUI()
+	{
+		Gui, PaintHelp: New
+		Gui, PaintHelp: Font, s11, Arial
+		Gui, PaintHelp: Add, Text, , F2: Right image rotation
+		Gui, PaintHelp: Add, Text, , F3: Change image size to 800 px
+		Gui, PaintHelp: Add, Text, , F4: Choose red rectangle
+		Gui, PaintHelp: Add, Text, , F5: Save as
+		Gui, PaintHelp: Add, Button, x300 gOK, OK
+		Gui, PaintHelp: Show, w350, Shortcuts hints for MS Paint 
+	}
+
+OK:
+	Gui, Submit, Hide  
+Return
+
+;/////////////////////////////////////////////////////////////////// - CHROME TAB SWITCHER (3)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button3()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+ReturnSwitch tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2}.
+				)
+Return
+}
+
+F_Checkbox3()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check3 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, Xbutton1, F_mybutton1, off
+			Hotkey, Xbutton2, F_mybutton2, off
+			IniWrite, No, VariousFunctions.ini, Menu memory, Browser Win Switcher
+		
+
+			Case 1:
+			Hotkey, Xbutton1, F_mybutton1, on 
+			Hotkey, Xbutton2, F_mybutton2, on 
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Browser Win Switcher
+		}
+}
+
+F_mybutton1()
+{
+	if !WinExist("ahk_class Chrome_WidgetWin_1")
+		{
+		Run, chrome.exe
+		}
+	if WinActive("ahk_class Chrome_WidgetWin_1") or WinActive("ahk_class TTOTAL_CMD")
+		{
+		Send, ^+{Tab}
+		}
+	else
+		{
+		WinActivate ahk_class Chrome_WidgetWin_1
+		}
+return	
+}
+
+F_mybutton2()
+{
+		if !WinExist("ahk_class Chrome_WidgetWin_1")
+		{
+		Run, chrome.exe
+		}
+	if WinActive("ahk_class Chrome_WidgetWin_1")  or WinActive("ahk_class TTOTAL_CMD")
+		{
+		Send, ^{Tab}
+		}
+	else
+		{
+		WinActivate ahk_class Chrome_WidgetWin_1
+		}
+return
+}
+
+;/////////////////////////////////////////////////////////////////// - OPEN TABS IN CHROME (4) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button4()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+Runs links:`n
+https://translate.google.com/`n
+https://group.voestalpine.net/EN/Pages/deepl.aspx`n
+https://www.linkedin.com/feed/`n
+https://mail.google.com/mail/u/0/#inbox`n
+https://trello.com/b/5h4R58KL/organizacyjne`n
+https://team.voestalpine.net/SitePages/Home.aspx`n
+https://helpdesk.tens.pl/helpdesk/`n
+https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx`n
+https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx`n
+https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx`n
+http://www.meteo.pl/`n
+				)
+Return
+}
+
+F_Checkbox4()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check4 ;0, 1, -1
+		{
+			Case 0:
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Browser
+		
+			Case 1:
+			Run, chrome.exe https://translate.google.com/ https://group.voestalpine.net/EN/Pages/deepl.aspx https://www.linkedin.com/feed/ https://mail.google.com/mail/u/0/#inbox http://www.meteo.pl/ https://trello.com/b/5h4R58KL/organizacyjne https://team.voestalpine.net/SitePages/Home.aspx https://helpdesk.tens.pl/helpdesk/ https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx 
+			WinWait, ahk_class Chrome_WidgetWin_1 ahk_exe chrome.exe
+			WinMaximize, 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Browser
+		}
+}
+
+;/////////////////////////////////////////////////////////////////// - PARENTHESIS WATCHER (5)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button5()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+After pressing keys like: {  [  (  `" , the closing symbols }  ]  ) `" will also appear. Aditionally a caret will jump between the parenthesis/quotation marks. It works also, when you have already written a text and want to put it between parenthesis/quotation marks. You have to select words and press parenthesis/quotation marks.
+				)
+Return
+}
+
+
+F_Checkbox5()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide
+	Switch Check5 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, ~{ , F_Parenthesis, Off
+			Hotkey, ~" , F_Parenthesis, Off
+			Hotkey, ~( , F_Parenthesis, Off
+			Hotkey, ~[ , F_Parenthesis, Off
+			Hotkey,      ~+Right Up,    F_Parenthesis, Off	;;events related to keyboard; order matters!
+			Hotkey,      ~+Left Up,     F_Parenthesis, Off
+			Hotkey,      ~^+Left Up,    F_Parenthesis, Off
+			Hotkey,      ~^+Right Up,   F_Parenthesis, Off 
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Parenthesis
+
+			Case 1:
+			Hotkey, ~{ , F_Parenthesis, On
+			Hotkey, ~" , F_Parenthesis, On
+			Hotkey, ~( , F_Parenthesis, On
+			Hotkey, ~[ , F_Parenthesis, On		
+			Hotkey,     ~+Right Up,     F_Parenthesis, On	;;events related to keyboard; order matters!
+			Hotkey,     ~+Left Up,      F_Parenthesis, On
+			Hotkey,     ~^+Left Up,     F_Parenthesis, On
+			Hotkey,     ~^+Right Up,    F_Parenthesis, On
+			IniWrite,   YES, VariousFunctions.ini, Menu memory, Parenthesis
+		}
+}
+
+F_Parenthesis()
+{	
+    global 
+	local ThisHotkey := A_ThisHotkey, f_Parenthesis := false
+		, LastPressedKey := A_PriorKey
+		, PreviousHotkey := A_PriorHotkey
+        ,  f_Cliboard := false
+        ,  OldClipboard := ""
+    static ToRemember := "", PreviousClipboard := ""
+
+    if (InStr(ThisHotkey, "{"))
+        f_Parenthesis   := true
+    if (InStr(ThisHotkey, """"))
+        f_Parenthesis   := true
+    if (InStr(ThisHotkey, "("))
+        f_Parenthesis   := true
+    if (InStr(ThisHotkey, "["))
+        f_Parenthesis   := true
+
+    if (InStr(ThisHotkey, "+Right Up"))
+        f_Cliboard      := true
+    if (InStr(ThisHotkey, "+Left Up"))
+        f_Cliboard      := true
+    if (InStr(ThisHotkey, "^+Right Up"))
+       f_Cliboard       := true
+    if (InStr(ThisHotkey, "^+Left Up"))
+        f_Cliboard      := true
+	{
+		Send, ^c
+		ClipWait, 0	;wait until clipboard is full with anything
+		PreviousClipboard := Clipboard
+		OutputDebug, % "PreviousClipboard:" . A_Tab . PreviousClipboard . "`n"
+	}
+       
+	if (PreviousHotkey = "~LButton Up") and (InStr(LastPressedKey, Shift))
+	{
+	    ToRemember := PreviousClipboard
+		PreviousClipboard := ""
+		f_Parenthesis := true
+	}
+
+	if (f_Parenthesis)
+    {
+	    ThisHotkey := SubStr(ThisHotkey, 0) ;extract last character
+        Switch ThisHotkey
+        {
+            Case "(":   
+                if (ToRemember)
+                {
+                    Send, % ToRemember . ")"
+                    ToRemember := ""
+					F_tooltip()
+                }
+                else
+                    Send, % ")" . "{Left}"
+					F_tooltip()
+
+            Case "[":
+                if (ToRemember)
+                {
+                    Send, % ToRemember . "]"
+                    ToRemember := ""
+					F_tooltip()
+                }
+                else
+                    Send, % "]" . "{Left}"
+					F_tooltip()
+
+            Case "{":   
+                if (ToRemember)
+                {
+                    Send, % ToRemember . "{}}"
+                    ToRemember := ""
+					F_tooltip()
+                }
+                else
+				{
+		        	Send, % "{}}" . "{Left}"
+					F_tooltip()
+				}
+            Case """":   
+                if (ToRemember)
+                {
+                    Send, % ToRemember . """"
+                    ToRemember := ""
+					F_tooltip()
+                }
+                else
+				{
+                    Send, % """" . "{Left}"
+					F_tooltip()
+				}
+        }
+
+    }
+    f_Parenthesis := false
+
+    if (f_Cliboard)
+    {
+	    OldClipBoard := ClipboardAll
+	    Clipboard := ""
+	    Send, ^c
+	    ClipWait, 0	;wait until clipboard is full with anything
+	    ToRemember := Clipboard
+	    Clipboard := OldClipBoard
+	    OldClipBoard := ""
+    }
+}
+
+F_tooltip() 
+{
+	ToolTip, Parenthesis watcher (VariousFunctions.ahk), A_CaretX, A_CaretY - 20
+	SetTimer, TurnOffTooltip, -1000 
+}
+
+;/////////////////////////////////////////////////////////////////// - US KEYBORD (6) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button6()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+			(
+Change keyboard settings (from Polish keyboard to English keyboard)
+			)
+Return
+}
+
+F_Checkbox6()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide
+	Switch Check6 ;0, 1, -1
+		{
+			Case 0:
+			SetDefaultKeyboard(PolishLanguage)
+			TrayTip, VariousFunctions.ahk, Keyboard style: PolishLanguage, 5, 0x1
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Set English Keyboard			
+
+			Case 1:
+			SetDefaultKeyboard(English_USA)
+			TrayTip, VariousFunctions.ahk, Keyboard style: English_USA, 5, 0x1 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Set English Keyboard
+		}
+}
+
+SetDefaultKeyboard(LocaleID)
+{
+	static SPI_SETDEFAULTINPUTLANG := 0x005A, SPIF_SENDWININICHANGE := 2
+	WM_INPUTLANGCHANGEREQUEST := 0x50
+	
+	Language := DllCall("LoadKeyboardLayout", "Str", Format("{:08x}", LocaleID), "Int", 0)
+	VarSetCapacity(binaryLocaleID, 4, 0)
+	NumPut(LocaleID, binaryLocaleID)
+	DllCall("SystemParametersInfo", UINT, SPI_SETDEFAULTINPUTLANG, UINT, 0, UPTR, &binaryLocaleID, UINT, SPIF_SENDWININICHANGE)
+	
+	WinGet, windows, List
+	Loop % windows
+		{
+		PostMessage WM_INPUTLANGCHANGEREQUEST, 0, % Language, , % "ahk_id " windows%A_Index%
+		}
+}
+
+;/////////////////////////////////////////////////////////////////// - RIGHT-CLICK CONTEXT MENU (7) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button7()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Redirects AltGr -> context menu`n
+(only in English keyboard layout)
+				)
+Return
+}
+
+F_Checkbox7()
+{
+	global 
+	Gui, Submit, NoHide 
+	Switch Check7 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, RAlt, F_JustAlt, Off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, AltGr
+		
+			Case 1:
+			Hotkey, RAlt, F_JustAlt, On
+			IniWrite, YES, VariousFunctions.ini, Menu memory, AltGr
+		}
+}
+
+F_JustAlt()
+{   
+	Send, {AppsKey}
+}
+
+;/////////////////////////////////////////////////////////////////// - VOLUME UP AND DOWN (8) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button8()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+ReturnTurn the volume up and down, by moving a mouse wheel. Works only when a caret is over the system tray.
+				)
+Return
+}
+
+#If MouseIsOver("ahk_class Shell_TrayWnd")
+#If
+
+F_Checkbox8()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check8 ;0, 1, -1
+		{
+			Case 0:
+				Hotkey, If, MouseIsOver("ahk_class Shell_TrayWnd")
+				Hotkey, WheelUp, 	F_mywheelup, 			off
+				Hotkey, WheelDown, 	F_mywheeldown, 			off
+				IniWrite, No, VariousFunctions.ini, Menu memory, Volume Up & Down
+				Hotkey, If
+		
+			Case 1:
+				Hotkey, If, MouseIsOver("ahk_class Shell_TrayWnd")
+				Hotkey, WheelUp, 	F_mywheelup, 			on 
+				Hotkey, WheelDown, 	F_mywheeldown, 			on 
+				IniWrite, Yes, VariousFunctions.ini, Menu memory, Volume Up & Down
+				Hotkey, If
+		}
+}
+
+
+MouseIsOver(WinTitle)
+{
+	MouseGetPos,,, Win
+	return WinExist(WinTitle . " ahk_id " . Win)
+}
+
+F_mywheelup()
+{
+	Send {Volume_Up}
+}
+
+F_mywheeldown()
+{
+	Send {Volume_Down}
+}
+
+;/////////////////////////////////////////////////////////////////// - WINDOW SWITCHER (9)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_Button9()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+Switches between windows by pressing {Left Windows} key and {Left Alt} key, then you can move between windows by using ← → ↑ ↓ 
+				)
+Return
+}
+
+F_Checkbox9()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check9 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey,	LWin & LAlt, 	F_windowswitch, 	Off 
+			Hotkey,	LAlt & LWin, 	F_windowswitch, 	Off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Window Switcher
+		
+			Case 1:
+			Hotkey,	LWin & LAlt, 	F_windowswitch, 	On 
+			Hotkey,	LAlt & LWin, 	F_windowswitch,		On 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Window Switcher
+		}
+}
+
+F_windowswitch()
+{
+		Send, {Ctrl Down}{LAlt Down}{Tab}{LAlt Up}{Ctrl Up}
+	return
+}
+;/////////////////////////////////////////////////////////////////// - CAPITALIZATION SWITCHER (10) (11)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;CAPSLOCK
+F_Button10()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Press Capslock to change capitalization of the letters.
+	EXAMPLES:
+	Dog is jumping -> DOG IS JUMPING
+	Dog -> DOG
+	DOG IS JUMPING -> dog is jumping
+	DOG -> dog
+	dog is jumping -> Dog is jumping
+	dog -> Dog
+It works everywhere exept Word, because in Word Application this function already exists.
+				)
+Return
+}
+
+F_Checkbox10()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check10 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, Capslock, ForceCapitalize, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Capitalize Capslock
+		
+			Case 1:
+			Hotkey, IfWinNotActive, ahk_exe WINWORD.EXE
+			Hotkey, Capslock, ForceCapitalize, on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Capitalize Capslock
+		}
+}
+
+;SHIFT + F3
+F_Button11()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Press {Shift} + {F3} to change capitalization of the letters.
+	EXAMPLES:
+	Dog is jumping -> DOG IS JUMPING
+	Dog -> DOG
+	DOG IS JUMPING -> dog is jumping
+	DOG -> dog
+	dog is jumping -> Dog is jumping
+	dog -> Dog
+It works everywhere exept Word, because in Word Application this function already exists.
+				)
+Return
+}
+
+F_Checkbox11()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check11 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, +F3, ForceCapitalize, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Capitalize Shift
+		
+			Case 1:
+			Hotkey, IfWinNotActive, ahk_exe WINWORD.EXE
+			Hotkey, +F3, ForceCapitalize, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Capitalize Shift
+		}
+}
+
+ForceCapitalize()	; by Jakub Masiak, revised by Hania Ziętak on 2021-12-20
+{
+	SelectWord := false												;Select Word := no (false)
+	OldClipboard := ClipboardAll									;save content of clipboard to variable OldClipboard 
+	Clipboard := ""													;clear content of clipboard
+	Send, ^c														;copy to clipboard (ctrl + c)
+	if (Clipboard = "")												;if clipboard is still empty, mark and copy word where caret is located
+	{
+		SelectWord := true											;Select Word := yes (true)
+		Send, {Ctrl Down}{left}{Shift Down}{Right}{Shift Up}{Ctrl Up}  ;mark entire word ; do przerobienia
+		Send, ^c														
+	}
+		ClipWait, 0													;wait until clipboard is full with anything
+	state := "FirstState"											;Initial state
+	Loop, Parse, Clipboard											;each character of Clipboard will be treated as a separate substring.
+	{
+		if A_LoopField is upper
+		{
+			if (state = "FirstState")
+			{
+				state := "UpperCaseState"							; "UpperCaseState" - a considered letter is uppercase 
+			}
+		}
+		else if A_LoopField is lower
+		{
+			if (state = "FirstState")
+			{
+				state := "LowerCaseState"							; "LowerCaseState" - a considered letter is lowercase
+			}
+		}
+		if (state = "UpperCaseState")
+		{
+			if A_Loopfield is lower
+			{
+				state := "AfterUpperCaseState"  					; "AfterUpperCaseState" - a considered letter is after a uppercase letter 
+			}
+		}
+		if (state = "LowerCaseState")
+		{
+			if A_Loopfield is upper
+			{
+				state := "AfterUpperCaseState"
+			}
+		}
+	}																;end of loop  ; the script is exiting the loop with the last letter status 
+
+	if (state = "AfterUpperCaseState")
+	{
+		StringUpper, Clipboard, Clipboard
+		TooltipCap()
+		
+	}
+	if (state = "UpperCaseState")
+	{
+		StringLower, Clipboard, Clipboard
+		TooltipCap()
+		
+	}
+	if (state = "LowerCaseState")
+	{
+		FirstLetter := ""											; exit state of the loop  ; a previous letter (in a word) in second loop  
+		NotAgain  := true											; flag: preventing capitalizing next letters  
+		Loop, Parse, Clipboard										; this loop is for the case that we have a word or sentence with all small letters (eg. dog/dog is jumping) and the next case is one capital then all small letters (eg. Dog/Dog is jumping) 
+		{
+			WhoAmI := A_LoopField									; what is first or after the first letter: space, dot, end of line or next letter (which has to be small)
+			if (WhoAmI = A_Space)
+			{
+				FirstLetter := % FirstLetter . A_Space
+				TooltipCap()
+			}
+			else if (WhoAmI = ".") or (WhoAmI = "`n") 
+			{
+				NotAgain := true	
+				FirstLetter := FirstLetter . WhoAmI
+				TooltipCap()
+			}
+			else if (NotAgain = true) and (WhoAmI != A_Space)
+			{
+				StringUpper, WhoAmI, WhoAmI
+				NotAgain := false
+				FirstLetter := FirstLetter . WhoAmI
+				TooltipCap()
+			}
+			else
+
+			{
+				FirstLetter := FirstLetter . WhoAmI
+				TooltipCap()
+			}
+		}
+		Clipboard := FirstLetter			
+	}
+	Send, % "{Text}" . Clipboard
+ 	Sleep, 100
+	Clipboard := OldClipboard
+	OldClipboard := ""
+return
+}
+
+TooltipCap()
+{
+	ToolTip, Capitalization switcher (VariousFunctions.ahk), A_CaretX, A_CaretY - 20
+	SetTimer, TurnOffTooltip, -1000 
+}
+
+;/////////////////////////////////////////////////////////////////// - FOOT SWITCH (12) (13) (14) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;F13
+F_Button12()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Switch windows in the system tray, by pressing {F13}. 
+				)
+Return
+}
+
+F_Checkbox12()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check12 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, F13, F_f13key, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, F13
+		
+			Case 1:
+			Hotkey, F13, F_f13key, on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, F13
+		}
+}
+
+F_f13key()
+{
+	Send, #t
+	SoundBeep, 1000, 200
+}
+
+;F14
+F_Button13()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Immediately resets the hotstring recognizer, by pressing {F14}. 
+				)
+Return
+}
+
+F_Checkbox13()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check13 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, F14, F_f14key, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, F14
+		
+			Case 1:
+			Hotkey, F14, F_f14key, on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, F14
+		}
+}
+
+F_f14key()
+{
+	msgbox, Tu jestem! 
+	Hotstring("Reset")
+	SoundBeep, 1500, 200 ; freq = 100, duration = 200 ms
+	ToolTip, [%A_thishotKey%] reset of AutoHotkey string recognizer, % A_CaretX, % A_CaretY - 20
+	SetTimer, TurnOffTooltip, -2000
+}
+
+;F15
+F_Button14()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Make a beep sound, by pressing {F15}.
+				)
+Return
+}
+
+F_Checkbox14()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check14 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, F15, F_f15key, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, F15
+		
+			Case 1:
+			Hotkey, F15, F_f15key, on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, F15
+		}
+}
+
+F_f15key()
+{
+
+	SoundBeep, 2000, 200
+}
+
+;/////////////////////////////////////////////////////////////////// - GOOGLE TRANSLATE (15) (16) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;ENGLISH → POLISH
+F_Button15()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Translate from English to Polish, by selecting text and pressing {Win} + {Ctrl} + t
+				)
+Return
+}
+
+F_Checkbox15()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check15 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, #^t, TranslationENtoPL, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, ENtoPL
+		
+			Case 1:
+			Hotkey, #^t, TranslationENtoPL, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, ENtoPL
+		}
+}
+
+;POLISH → ENGLISH
+F_Button16()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Translate from Polish to English, by selecting text and pressing {Win} + t.
+				)
+Return
+}
+
+F_Checkbox16()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check16 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, #t, TranslationPLtoEN, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, PLtoEN
+		
+			Case 1:
+			Hotkey, #t, TranslationPLtoEN, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, PLtoEN
+		}
+}
+
+TranslationPLtoEN()
+{											
+	OldClipboard := ClipboardAll								 
+	Clipboard := ""												
+	Send, ^c																										
+    ClipWait, 0	
+    MsgBox, % OldClipboard  GoogleTranslate(Clipboard, "pl", "en")
+	; TooltipTrans()	
+    Clipboard:=  % GoogleTranslate(Clipboard, "pl", "en")
+}
+
+TranslationENtoPL()
+{
+	OldClipboard := ClipboardAll									
+	Clipboard := ""													
+	Send, ^c														
+	ClipWait, 0
+    MsgBox, % GoogleTranslate(Clipboard, "en", "pl")
+	; TooltipTrans()
+    Clipboard:= GoogleTranslate(Clipboard, "en", "pl")
+}
+
+;Author: https://www.autohotkey.com/boards/viewtopic.php?t=63835
+GoogleTranslate(str, from := "auto", to := "en") {
+   static JS := CreateScriptObj(), _ := JS.( GetJScript() ) := JS.("delete ActiveXObject; delete GetObject;")
+   
+   json := SendRequest(JS, str, to, from, proxy := "")
+   oJSON := JS.("(" . json . ")")
+
+   if !IsObject(oJSON[1]) {
+      Loop % oJSON[0].length
+         trans .= oJSON[0][A_Index - 1][0]
+   }
+   else {
+      MainTransText := oJSON[0][0][0]
+      Loop % oJSON[1].length {
+         trans .= "`n+"
+         obj := oJSON[1][A_Index-1][1]
+         Loop % obj.length {
+            txt := obj[A_Index - 1]
+            trans .= (MainTransText = txt ? "" : "`n" txt)
+         }
+      }
+   }
+   if !IsObject(oJSON[1])
+      MainTransText := trans := Trim(trans, ",+`n ")
+   else
+      trans := MainTransText . "`n+`n" . Trim(trans, ",+`n ")
+
+   from := oJSON[2]
+   trans := Trim(trans, ",+`n ")
+   Return trans
+}
+
+SendRequest(JS, str, tl, sl, proxy) {
+   static http
+   ComObjError(false)
+   if !http
+   {
+      http := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+      ( proxy && http.SetProxy(2, proxy) )
+      http.open("GET", "https://translate.google.com", true)
+      http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
+      http.send()
+      http.WaitForResponse(-1)
+   }
+   http.open("POST", "https://translate.googleapis.com/translate_a/single?client=gtx"
+      . "&sl=" . sl . "&tl=" . tl . "&hl=" . tl
+      . "&dt=at&dt=bd&dt=ex&dt=ld&dt=md&dt=qca&dt=rw&dt=rm&dt=ss&dt=t&ie=UTF-8&oe=UTF-8&otf=0&ssel=0&tsel=0&pc=1&kc=1"
+      . "&tk=" . JS.("tk").(str), true)
+
+   http.SetRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
+   http.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
+   http.send("q=" . URIEncode(str))
+   http.WaitForResponse(-1)
+   Return http.responsetext
+}
+
+URIEncode(str, encoding := "UTF-8")  {
+   VarSetCapacity(var, StrPut(str, encoding))
+   StrPut(str, &var, encoding)
+
+   while code := NumGet(Var, A_Index - 1, "UChar")  {
+      bool := (code > 0x7F || code < 0x30 || code = 0x3D)
+      UrlStr .= bool ? "%" . Format("{:02X}", code) : Chr(code)
+   }
+   Return UrlStr
+}
+
+GetJScript()
+{
+   script =
+   (
+      var TKK = ((function() {
+        var a = 561666268;
+        var b = 1526272306;
+        return 406398 + '.' + (a + b);
+      })());
+
+      function b(a, b) {
+        for (var d = 0; d < b.length - 2; d += 3) {
+            var c = b.charAt(d + 2),
+                c = "a" <= c ? c.charCodeAt(0) - 87 : Number(c),
+                c = "+" == b.charAt(d + 1) ? a >>> c : a << c;
+            a = "+" == b.charAt(d) ? a + c & 4294967295 : a ^ c
+        }
+        return a
+      }
+
+      function tk(a) {
+          for (var e = TKK.split("."), h = Number(e[0]) || 0, g = [], d = 0, f = 0; f < a.length; f++) {
+              var c = a.charCodeAt(f);
+              128 > c ? g[d++] = c : (2048 > c ? g[d++] = c >> 6 | 192 : (55296 == (c & 64512) && f + 1 < a.length && 56320 == (a.charCodeAt(f + 1) & 64512) ?
+              (c = 65536 + ((c & 1023) << 10) + (a.charCodeAt(++f) & 1023), g[d++] = c >> 18 | 240,
+              g[d++] = c >> 12 & 63 | 128) : g[d++] = c >> 12 | 224, g[d++] = c >> 6 & 63 | 128), g[d++] = c & 63 | 128)
+          }
+          a = h;
+          for (d = 0; d < g.length; d++) a += g[d], a = b(a, "+-a^+6");
+          a = b(a, "+-3^+b+-f");
+          a ^= Number(e[1]) || 0;
+          0 > a && (a = (a & 2147483647) + 2147483648);
+          a `%= 1E6;
+          return a.toString() + "." + (a ^ h)
+      }
+   )
+   Return script
+}
+
+CreateScriptObj() {
+   static doc, JS, _JS
+   if !doc {
+      doc := ComObjCreate("htmlfile")
+      doc.write("<meta http-equiv='X-UA-Compatible' content='IE=9'>")
+      JS := doc.parentWindow
+      if (doc.documentMode < 9)
+         JS.execScript()
+      _JS := ObjBindMethod(JS, "eval")
+   }
+   Return _JS
+}
+
+	Clipboard := OldClipboard
+return
+
+TooltipTrans()
+{
+	ToolTip, Google Translate (VariousFunctions.ahk), A_CaretX, A_CaretY - 20
+	SetTimer, TurnOffTooltip, -1000
+}
+
+;/////////////////////////////////////////////////////////////////// - POWER PC (17) (18) (19) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;SUSPEND
+F_Button17()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Suspend, by pressing {Ctrl} + {shift} + F1
+				)
+Return
+}
+
+F_Checkbox17()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check17 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, +^F1,  F_mysuspend1, off 
+			IniWrite, No, VariousFunctions.ini, Menu memory, Suspend
+		
+			Case 1:
+			Hotkey, +^F1, F_mysuspend1, on 
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Suspend
+		}
+}
+
+F_mysuspend1()
+{
+	DllCall("PowrProf\SetSuspendState", "int", 0, "int", 0, "int", 0)
+}
+
+;REBOOT
+F_Button18()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Reboot by pressing a Multimedia key - {Ctrl}+{Volume Up} or {Ctrl} + {Shift} + {F2}
+				)
+Return
+}
+
+F_Checkbox18()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check18 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, ^Volume_Up, F_volup, 		Off
+			Hotkey, +^F2, 		F_volup, 		off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Reboot
+		
+			Case 1:
+			Hotkey, ^Volume_Up, F_volup, 		on
+			Hotkey, +^F2, 		F_volup, 		on 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Reboot
+		}
+}
+
+F_volup()
+{
+	Shutdown, 2
+}
+
+;SHUTDOWN
+F_Button19()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Shutdown system, by pressing a Multimedia key - {Ctrl}+{Volume Mute} or {Ctrl} + {Shift} + {F3}
+				)
+Return
+}
+
+F_Checkbox19()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check19 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, ^Volume_Mute, 	F_volmute, 		Off
+			Hotkey, +^F3, 			F_volmute, 		Off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Shutdown
+		
+			Case 1:
+			Hotkey, ^Volume_Mute, 	F_volmute, 		On
+			Hotkey, +^F3, 			F_volmute, 		On
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Shutdown
+		}
+}
+
+F_volmute()
+{
+	Shutdown, 1 + 8
+}
+
+;/////////////////////////////////////////////////////////////////// - TRANSPARENCY SWITCHER (20) (21) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;MOUSE
+F_Button20()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Smooth toggle window tranparency, by moving mouse wheel and pressing {Ctrl}+{Shift}.
+				)
+Return
+}
+
+F_Checkbox20()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check20 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, ^+WheelDown, 	F_MouseTranspdown, 	off
+			Hotkey, ^+WheelUp, 		F_MouseTranspup, 	off
+			IniWrite, No, VariousFunctions.ini, Menu memory, Tranparency Mouse
+		
+			Case 1:
+			Hotkey, ^+WheelDown,	 F_MouseTranspdown, 	on 
+			Hotkey, ^+WheelUp,		 F_MouseTranspup, 		on 
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Tranparency Mouse
+		}
+}
+
+F_MouseTranspdown()
+{
+ TransFactor := TransFactor - 25.5
+    if (TransFactor < 0)
+        TransFactor := 0
+    WinSet, Transparent, %TransFactor%, A
+    TransProc := Round(100*TransFactor/255)
+    ToolTip, Transparency set to %TransProc%`%
+    SetTimer, TurnOffTooltip, -500
+    Return 
+}
+
+F_MouseTranspup()
+{
+	TransFactor := TransFactor + 25.5
+    if (TransFactor > 255)
+        TransFactor := 255
+    WinSet, Transparent, %TransFactor%, A  
+    TransProc := Round(100*TransFactor/255)
+    ToolTip, Transparency set to %TransProc%`%
+    SetTimer, TurnOffTooltip, -500
+    Return
+}
+
+;KEYS
+F_Button21()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+Toggle window transparency by pressing {Ctr} + {Windows} + {F9} by half.
+				)
+Return
+}
+
+F_Checkbox21()
+{
+	global		;assume-global mode of operation
+	Gui, Submit, NoHide 
+	Switch Check21 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, ^#F9, F_transp, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Transparency
+		
+			Case 1:
+			Hotkey, ^#F9, F_transp, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Transparency
+		}
+}
+
+F_transp()
+{ 
+	global 
+	static WindowTransparency := false
+	if (WindowTransparency = false)
+		{
+		WinSet, Transparent, 125, A
+		WindowTransparency := true
+		ToolTip, This window atribut Transparency was changed to semi-transparent ;, % A_CaretX, % A_CaretY - 20
+		SetTimer, TurnOffTooltip, -2000
+		return
+		}
+	else
+		{
+		WinSet, Transparent, 255, A
+		WindowTransparency := false
+		ToolTip, This window atribut Transparency was changed to opaque ;, % A_CaretX, % A_CaretY - 20
+		;SetTimer, TurnOffTooltip, -2000
+		return
+		}
+}
+
+;//////////////////////////////////////////// - FUNCTIONS IN MS WORD (22) (23) (24) (25) (26) (27) (28) (29) (30) (31) (32) (32) (33) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;ALIGN LEFT (22)
+F_Button22()
+{
+	Gui, Submit, NoHide
+	Msgbox, 
+				(
+Align your content with the left margin in Microsoft Word, by pressing {Ctrl} + {Shift} + l.
+				)
+Return
+}
+
+F_Checkbox22()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check22 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, +^l, F_myalignleft, off 
+			IniWrite, No, VariousFunctions.ini, Menu memory, Align Left
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, +^l, F_myalignleft, on 
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Align Left
+		}
+}
+
+F_myalignleft()
+{
+	Send, ^l
+}
+
+;APPLY STYLES (23)
+F_Button23()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Open and close the Apply Styles window in Microsoft Word, by pressing {Ctrl} + {shift} + s.
+				)
+Return
+}
+
+F_Checkbox23()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check23 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, +^s, ToggleApplyStylesPane, off 
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Apply Styles
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, +^s, ToggleApplyStylesPane, on 
+			Hotkey, IfWinActive
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Apply Styles 
+		}
+}
+
+ToggleApplyStylesPane()
+{
+	global oWord
+	global  WordTrue, WordFalse	
+	
+	oWord := ComObjActive("Word.Application")
+	ApplyStylesTaskPane := oWord.Application.TaskPanes(17).Visible
+
+	If (ApplyStylesTaskPane = WordFalse)
+		oWord.Application.TaskPanes(17).Visible 	:= WordTrue
+	If (ApplyStylesTaskPane = WordTrue)
+		oWord.CommandBars("Apply styles").Visible 	:= WordFalse
+
+	oWord := ""
+}
+
+
+;AUTOSAVE (24)
+F_Button24()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+The function starts autosave of word documents, every 10 min, if the file size has changed. The copy is saved in the path: C:\temp1\KopiaZapasowaPlikowWord.
+				)
+Return
+}
+
+F_Checkbox24()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check24 ;0, 1, -1
+		{
+			Case 0:
+			IniWrite, No, VariousFunctions.ini, Menu memory, Autosave
+			AutosaveIni := 0
+			SetTimer, F_AutoSave, Off
+			TrayTip, %A_ScriptName%, Autozapis został wyłączony!, 5, 0x1
+
+			Case 1:
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Autosave
+			AutosaveIni := 1
+			SetTimer, F_AutoSave, % interval
+			TrayTip, %A_ScriptName%, Autozapis został włączony!, 5, 0x1
+		}
+}
+
+F_AutoSave()
+{
+	InitAutosaveFilePath(AutosaveFilePath)
 	
 	if WinExist("ahk_class OpusApp")
 		oWord := ComObjActive("Word.Application")
@@ -779,12 +1548,11 @@ AutoSave:
 	}
 	catch
 	{
-		; try again in 5 seconds
-		SetTimer, AutoSave, 5000
+		SetTimer, F_AutoSave, 5000	; try again in 5 seconds
 		return
 	}
 	; reset the timer in case it was changed by catch
-	SetTimer, AutoSave, % interval
+	SetTimer, F_AutoSave, % interval
 	oWord := ""
 	doc := ""
 	return
@@ -796,477 +1564,376 @@ InitAutosaveFilePath(path)
 		FileCreateDir, % path
 	return true
 }
-;--------------------------------------------------
-Mouseyes:
-	Menu,Submenumouse, Check, Yes 
-	Menu, Submenumouse, Uncheck, No 
-	F_TransparencyMou("Yes")
-return
 
-Mouseno:
-	Menu, Submenumouse, Check, No 
-	Menu, Submenumouse, Uncheck, Yes
-	F_TransparencyMou("No")
-return
+;DELETE LINE (25)
+F_Button25()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Delete whole text line in Microsoft Word, by pressing {Ctrl} + l.
+				)
+Return
+}
 
-MouseDesc:
-	Msgbox, Toggle window tranparency, by moving mouse wheel and pressing {Ctrl}+{Shift}. 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+F_Checkbox25()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check25 ;0, 1, -1
 		{
-		Menu, Submenumouse, Check, Yes 
-		Menu, Submenumouse, UnCheck, No 
-		F_TransparencyMou("Yes")
+			Case 0:
+			Hotkey, ^l, DeleteLineOfText, off 
+			IniWrite, No, VariousFunctions.ini, Menu memory, Delete Line 
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^l, DeleteLineOfText, on 
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Delete Line
 		}
-		else, 
+}
+
+DeleteLineOfText() ; 2019-10-03
+{
+	global oWord
+	oWord := ComObjActive("Word.Application")
+	oWord.Selection.HomeKey(Unit := wdLine := 5)
+	oWord.Selection.EndKey(Unit := wdLine := 5, Extend := wdExtend := 1)
+	oWord.Selection.Delete(Unit := wdCharacter := 1, Count := 1)
+	oWord :=  "" ; Clear global COM objects when done with them
+}
+
+;HIDDEN TEXT (26) (27)
+;HIDE (26)
+F_Button26()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Set "Ukryty ms" style of selected text in Microsoft Word, by pressing {Shift} + {Ctrl} + h (in out template only).
+				)
+Return
+}
+
+F_Checkbox26()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check26 ;0, 1, -1
 		{
-		Menu, Submenumouse, Check, No
-		Menu, Submenumouse, UnCheck, Yes  
-		F_TransparencyMou("No")
-		}
-return
-;-------------------------------------------------
-Browinswiyes:
-	Menu,Subbrowinswitcher, Check, Yes 
-	Menu, Subbrowinswitcher, Uncheck, No 
-	F_BroWinSwi("Yes")
-return
+			Case 0:
+			Hotkey, +^h, HideSelectedText, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Hidetext 
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, +^h, HideSelectedText, on  
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Hidetext
+}
+}
 
-Browinswino:
-	Menu, Subbrowinswitcher, Check, No 
-	Menu, Subbrowinswitcher, Uncheck, Yes
-	F_BroWinSwi("No")
-return
+HideSelectedText() ; 2019-10-22 2019-11-08
+{
+	global oWord
+	global  WordTrue, WordFalse
 
-BroWinSwiDesc:
-	Msgbox, Switche tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2}
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+	oWord 		:= ComObjActive("Word.Application")
+,	OurTemplate := oWord.ActiveDocument.AttachedTemplate.FullName
+	if (InStr(OurTemplate, OurTemplateEN) or InStr(OurTemplate, OurTemplatePL) or InStr(OurTemplate, OurTemplateOldPL) or InStr(OurTemplate, OurTemplateOldEN)) ;if template is attached
+	{
+		nazStyl := oWord.Selection.Style.NameLocal	;nazStyl = set style of currently selected text
+		if (nazStyl = "Ukryty ms")					;if style of selected text is "Ukryty ms", give this text the default formatting (keyboard shortcut Ctrl + Space bar)
+			Send, ^{Space}
+		else
 		{
-		Menu, Subbrowinswitcher, Check, Yes 
-		Menu, Subbrowinswitcher, UnCheck, No 
-		F_BroWinSwi("Yes")
+			language := oWord.Selection.Range.LanguageID
+			oWord.Selection.Paragraphs(1).Range.LanguageID := language	;set currently language for selected text
+			oWord.Selection.Style := "Ukryty ms"
 		}
-		else, 
+	}
+	else	;if template is not attached
+	{
+		StateOfHidden 					:= oWord.Selection.Font.Hidden
+,		oWord.Selection.Font.Hidden 	:= WordTrue
+		if (StateOfHidden == WordFalse)
+			oWord.Selection.Font.Hidden := WordTrue	
+		else
+			oWord.Selection.Font.Hidden := WordFalse
+	}
+	oWord := "" ; Clear global COM objects when done with them
+}
+
+;HIDDENTEXT (26) (27)
+;SHOW (27)
+F_Button27()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Enables and disables hidden text and non-printing characters in Microsoft Word, by pressing {Ctrl} + *.
+				)
+Return
+}
+
+F_Checkbox27()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check27 ;0, 1, -1
 		{
-		Menu, Subbrowinswitcher, Check, No
-		Menu, Subbrowinswitcher, UnCheck, Yes  
-		F_BroWinSwi("No")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^*, ShowHiddenText, off
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Showtext 
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^*, ShowHiddenText, on  
+			Hotkey, IfWinActive
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Showtext
 		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-Volumeyes:
-	Menu,Subvolume, Check, Yes 
-	Menu, Subvolume, Uncheck, No 
-	F_Volume("Yes")
-return
+}
 
-Volumeno:
-	Menu, Subvolume, Check, No 
-	Menu, Subvolume, Uncheck, Yes
-	F_Volume("No")
-return
+ShowHiddenText(AdditionalText := "")
+;~ by Jakub Masiak
+{
+	global oWord
+	oWord 			:= ComObjActive("Word.Application")
+,	HiddenTextState := oWord.ActiveWindow.View.ShowHiddenText
 
-VolumeDesc:
-	Msgbox, Turn the volume up and down, by moving a mouse wheel. Works only when a caret is over the system tray. 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+	if (oWord.ActiveWindow.View.ShowAll = WordTrue)
+	{
+		oWord.ActiveWindow.View.ShowAll 			:= WordFalse
+		oWord.ActiveWindow.View.ShowTabs 			:= WordFalse
+		oWord.ActiveWindow.View.ShowSpaces 			:= WordFalse
+		oWord.ActiveWindow.View.ShowParagraphs 		:= WordFalse
+		oWord.ActiveWindow.View.ShowHyphens 		:= WordFalse
+		oWord.ActiveWindow.View.ShowObjectAnchors 	:= WordFalse
+		oWord.ActiveWindow.View.ShowHiddenText 		:= WordFalse
+	}
+	else
+	{
+		oWord.ActiveWindow.View.ShowAll 			:= WordTrue
+		oWord.ActiveWindow.View.ShowTabs 			:= WordTrue
+		oWord.ActiveWindow.View.ShowSpaces 			:= WordTrue
+		oWord.ActiveWindow.View.ShowParagraphs 		:= WordTrue
+		oWord.ActiveWindow.View.ShowHyphens 		:= WordTrue
+		oWord.ActiveWindow.View.ShowObjectAnchors 	:= WordTrue
+		oWord.ActiveWindow.View.ShowHiddenText 		:= WordTrue
+	}
+	oWord := ""
+}
+
+;HYPERLINK (28)
+F_Button28()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Add hyperlink in selected text in Microsoft Word, by pressing {Ctrl} + k.
+				)
+Return
+}
+
+F_Checkbox28()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check28 ;0, 1, -1
 		{
-		Menu, Subvolume, Check, Yes 
-		Menu, Subvolume, UnCheck, No 
-		F_Volume("Yes")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^k, F_hiper, off
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Hyperlink
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^k, F_hiper, on 
+			Hotkey, IfWinActive 
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Hyperlink
 		}
-		else, 
+}
+
+F_hiper()
+{
+	Send, {LAlt Down}{Ctrl Down}h{Ctrl Up}{LAlt Up}
+}
+
+;OPEN AND SHOW PATH (29)
+F_Button29()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Open "Open" window and show the path of a document on the top bar of the document in Microsoft Word, by pressing {Ctrl} + o and esc.
+				)
+Return
+}
+
+F_Checkbox29()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check29 ;0, 1, -1
 		{
-		Menu, Subvolume, Check, No
-		Menu, Subvolume, UnCheck, Yes  
-		F_Volume("No")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^o,  FullPath, off 
+			Hotkey, IfWinActive
+			IniWrite, No, VariousFunctions.ini, Menu memory, Open and Show Path
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^o, FullPath, on 
+			Hotkey, IfWinActive
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Open and Show Path
 		}
-return
+}
 
-;--------------------------------------------------
-;-------------------------------------------------
-Suspendyes:
-	Menu,SubmenuSuspend, Check, Yes 
-	Menu, SubmenuSuspend, Uncheck, No 
-	F_Suspend("Yes")
-return
+FullPath(AdditionalText := "") ; display full path to a file in window title bar 
+;~ by Jakub Masiak
+{
+	global oWord
+    ; Base(AdditionalText)
+	oWord := ComObjActive("Word.Application")
+    oWord.ActiveWindow.Caption := oWord.ActiveDocument.FullName
+    oWord := ""
+	Send, ^{o down}{o up}
+}
 
-Suspendno:
-	Menu, SubmenuSuspend, Check, No 
-	Menu, SubmenuSuspend, Uncheck, Yes
-	F_Suspend("No")
-return
+;STRIKETHROUGH TEXT (30)
+F_Button30()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Strike selected text through, by pressing {Ctrl} + {Shift} + x.
+				)
+Return
+}
 
-SuspendDesc:
-	Msgbox, Suspend, by pressing {Ctrl} + {shift} + F1
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+F_Checkbox30()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check30 ;0, 1, -1
 		{
-		Menu, SubmenuSuspend, Check, Yes 
-		Menu, SubmenuSuspend, UnCheck, No 
-		F_Suspend("Yes")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^+x,  StrikeThroughText, off
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Strikethrough Text
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^+x, StrikeThroughText, on  
+			Hotkey, IfWinActive
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Strikethrough Text
 		}
-		else, 
+}
+
+StrikeThroughText()
+{
+	global oWord
+	global  WordTrue, WordFalse	
+
+	oWord := ComObjActive("Word.Application")
+	StateOfStrikeThrough := oWord.Selection.Font.StrikeThrough ; := wdToggle := 9999998 
+	if (StateOfStrikeThrough == WordFalse)
 		{
-		Menu, SubmenuSuspend, Check, No
-		Menu, SubmenuSuspend, UnCheck, Yes  
-		F_Suspend("No")
+		oWord.Selection.Font.StrikeThrough := wdToggle := 9999998
 		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-Tableyes:
-	Menu,Subtable, Check, Yes 
-	Menu, Subtable, Uncheck, No 
-	F_Table("Yes")
-return
-
-Tableno:
-	Menu, Subtable, Check, No 
-	Menu, Subtable, Uncheck, Yes
-	F_Table("No")
-return
-
-
-TableDesc:
-	Msgbox, Hotstring: After typing "tabela`t", you receive | | |{Enter} - table in Microsoft Word 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+	else
 		{
-		Menu, Subtable, Check, Yes 
-		Menu, Subtable, UnCheck, No 
-		F_Table("Yes")
+		oWord.Selection.Font.StrikeThrough := 0
 		}
-		else, 
+	oWord :=  "" ; Clear global COM objects when done with them
+}
+
+;TABLE (31)
+F_Button31()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+After typing "tabela" + tab, you receive | | | + {Enter}. You recive table in Microsoft Word. 
+				)
+Return
+}
+
+F_Checkbox31()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check31 ;0, 1, -1
 		{
-		Menu, Subtable, Check, No
-		Menu, Subtable, UnCheck, Yes  
-		F_Table("No")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotstring(":*:tabela`t", "| | |`n", "off")
+			Hotkey, IfWinActive 
+			IniWrite, No, VariousFunctions.ini, Menu memory, Table
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotstring(":*:tabela`t", "| | |", "on")
+			Hotkey, IfWinActive
+			IniWrite, Yes, VariousFunctions.ini, Menu memory, Table
 		}
-	return
-;--------------------------------------------------
-;-------------------------------------------------
-Openpathyes:
-	Menu, Subopenpath, Check, Yes 
-	Menu, Subopenpath, Uncheck, No 
-	F_OpenPath("Yes")
-return
+}
 
-Openpathno:
-	Menu, Subopenpath, Check, No 
-	Menu, Subopenpath, Uncheck, Yes
-	F_OpenPath("No")
-return
+;TEMPLATE (32) (33)
+;ADD (32)
+F_Button32()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t.
+				)
+Return
+}
 
-
-OpenpathDesc:
-	Msgbox, Open "Open" window and show the path of a document in Microsoft Word, by pressing {Ctrl} + o
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+F_Checkbox32()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check32 ;0, 1, -1
 		{
-		Menu, Subopenpath, Check, Yes 
-		Menu, Subopenpath, UnCheck, No 
-		F_OpenPath("Yes")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^t,  F_myaddtemplate, off
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Add Template
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^t, F_myaddtemplate, on  
+			Hotkey, IfWinActive
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Add Template 
 		}
-		else, 
-		{
-		Menu, Subopenpath, Check, No
-		Menu, Subopenpath, UnCheck, Yes  
-		F_OpenPath("No")
-		}
-	return
+}
 
-;--------------------------------------------------
-;-------------------------------------------------
-Applystylesyes:
-	Menu,Subapply, Check, Yes 
-	Menu, Subapply, Uncheck, No 
-	F_ApplyStyles("Yes")
-return
-
-Applystylesno:
-	Menu, Subapply, Check, No 
-	Menu, Subapply, Uncheck, Yes
-	F_ApplyStyles("No")
-return
-
-
-ApplystylesDesc:
-	Msgbox, Open and close the Apply Styles window in Microsoft Word, by pressing {Ctrl} + {shift} + s
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subapply, Check, Yes 
-		Menu, Subapply, UnCheck, No 
-		F_ApplyStyles("Yes")
-		}
-		else, 
-		{
-		Menu, Subapply, Check, No
-		Menu, Subapply, UnCheck, Yes  
-		F_ApplyStyles("No")
-		}
-		return
-;--------------------------------------------------
-;-------------------------------------------------
-Alignleftyes:
-	Menu,Subalign, Check, Yes 
-	Menu, Subalign, Uncheck, No 
-	F_AlignLeft("Yes")
-return
-
-Alignleftno:
-	Menu, Subalign, Check, No 
-	Menu, Subalign, Uncheck, Yes
-	F_AlignLeft("No")
-return
-
-AlignleftDesc:
-	Msgbox, Align your content with the left margin in Microsoft Word, by pressing {Ctrl} + {Shift} + l
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subalign, Check, Yes 
-		Menu, Subalign, UnCheck, No 
-		F_AlignLeft("Yes")
-		}
-		else, 
-		{
-		Menu, Subalign, Check, No
-		Menu, Subalign, UnCheck, Yes  
-		F_AlignLeft("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-Deletelineyes:
-	Menu,Subdeleteline, Check, Yes 
-	Menu, Subdeleteline, Uncheck, No 
-	F_DeleteLine("Yes")
-return
-
-Deletelineno:
-	Menu, Subdeleteline, Check, No 
-	Menu, Subdeleteline, Uncheck, Yes
-	F_DeleteLine("No")
-return
-
-DeletelineDesc:
-	Msgbox, Delete whole text line in Microsoft Word, by pressing {Ctrl} + l
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subdeleteline, Check, Yes 
-		Menu, Subdeleteline, UnCheck, No 
-		F_DeleteLine("Yes")
-		}
-		else, 
-		{
-		Menu, Subdeleteline, Check, No
-		Menu, Subdeleteline, UnCheck, Yes  
-		F_DeleteLine("No")
-		}
-		return
-;--------------------------------------------------
-;-------------------------------------------------
-Strikethroyes:
-	Menu,Substrikethro, Check, Yes 
-	Menu, Substrikethro, Uncheck, No 
-	F_Strikethrough("Yes")
-return
-
-Strikethrono:
-	Menu, Substrikethro, Check, No 
-	Menu, Substrikethro, Uncheck, Yes
-	F_Strikethrough("No")
-return
-
-StrikethroDesc:
-	Msgbox, Stike selected text through, by pressing {Ctrl} + {Shift} + x
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Substrikethro, Check, Yes 
-		Menu, Substrikethro, UnCheck, No 
-		F_Strikethrough("Yes")
-		}
-		else, 
-		{
-		Menu, Substrikethro, Check, No
-		Menu, Substrikethro, UnCheck, Yes  
-		F_Strikethrough("No")
-		}
-return
-
-;--------------------------------------------------
-;-------------------------------------------------
-Hyperyes:
-	Menu,Subhyper, Check, Yes 
-	Menu, Subhyper, Uncheck, No 
-	F_Hyper("Yes")
-return
-
-Hyperno:
-	Menu, Subhyper, Check, No 
-	Menu, Subhyper, Uncheck, Yes
-	F_Hyper("No")
-return
-
-HyperDesc:
-	Msgbox, Add hyperlink in selected text in Microsoft Word, by pressing {Ctrl} + k
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subhyper, Check, Yes 
-		Menu, Subhyper, UnCheck, No 
-		F_Hyper("Yes")
-		}
-		else, 
-		{
-		Menu, Subhyper, Check, No
-		Menu, Subhyper, UnCheck, Yes  
-		F_Hyper("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-
-Hideyes:
-	Menu, Subhide, Check, Yes 
-	Menu, Subhide, Uncheck, No 
-	F_Hide("Yes")
-return
-
-Hideno:
-	Menu, Subhide, Check, No 
-	Menu, Subhide, Uncheck, Yes
-	F_Hide("No")
-return
-
-HideDesc:
-	Msgbox, Hide selected text in Microsoft Word, by pressing {Shift} + {Ctrl} + h
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subhide, Check, Yes 
-		Menu, Subhide, UnCheck, No 
-		F_Hide("Yes")
-		}
-		else, 
-		{
-		Menu, Subhide, Check, No
-		Menu, Subhide, UnCheck, Yes  
-		F_Hide("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-Showyes:
-	Menu, Subshow, Check, Yes 
-	Menu, Subshow, Uncheck, No 
-	F_Show ("Yes")
-return
-
-Showno:
-	Menu, Subshow, Check, No 
-	Menu, Subshow, Uncheck, Yes
-	F_Show("No")
-return
-
-ShowDesc:
-	Msgbox, Show hidden text and special signs in Microsoft Word, by pressing {Ctrl} + *
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subshow, Check, Yes 
-		Menu, Subshow, UnCheck, No 
-		F_Show("Yes")
-		}
-		else, 
-		{
-		Menu, Subshow, Check, No
-		Menu, Subshow, UnCheck, Yes  
-		F_Show("No")
-		}
-	return
-;--------------------------------------------------
-;-------------------------------------------------
-Templateoffyes:
-	Menu, Subtemplateoff, Check, Yes 
-	Menu, Subtemplateoff, Uncheck, No 
-	F_TemplateOff("Yes")
-return
-
-Templateoffno:
-	Menu, Subtemplateoff, Check, No
-	Menu, Subtemplateoff, Uncheck, Yes
-	F_TemplateOff("No")
-return
-
-TemplateoffDesc:
-	Msgbox, Switch off added template, by pressing {Ctrl} + {Shift} + t
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subtemplateoff, Check, Yes 
-		Menu, Subtemplateoff, UnCheck, No 
-		F_TemplateOff("Yes")
-		}
-		else, 
-		{
-		Menu, Subtemplateoff, Check, No
-		Menu, Subtemplateoff, UnCheck, Yes  
-		F_TemplateOff("No")
-		}
-return
-
-;--------------------------------------------------
-;-------------------------------------------------
-Addtemplateyes:
-	Menu, Subaddtemplate, Check, Yes 
-	Menu, Subaddtemplate, Uncheck, No 
-	F_AddTemplate("Yes")
-return
-Addtemplateno:
-	Menu, Subaddtemplate, Check, No
-	Menu, Subaddtemplate, Uncheck, Yes
-	F_AddTemplate("No")
-return
-
-AddtemplateDesc:
-	Msgbox, Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Subaddtemplate, Check, Yes 
-		Menu, Subaddtemplate, UnCheck, No 
-		F_AddTemplate("Yes")
-		}
-		else, 
-		{
-		Menu, Subaddtemplate, Check, No
-		Menu, Subaddtemplate, UnCheck, Yes  
-		F_AddTemplate("No")
-		}
-return
-
+F_myaddtemplate()
+{
+	gosub, AutoTemplate
+}
 AutoTemplate:
 	oWord := ComObjActive("Word.Application")
 	try
-		template := oWord.ActiveDocument.CustomDocumentProperties["PopSzab"].Value
+		var_PopSzab := oWord.ActiveDocument.CustomDocumentProperties["PopSzab"].Value ;PopSzab Sets the value depending on the selected template (File - information - properties - advanced properties).
 	catch
 	{
 		oWord.ActiveDocument.CustomDocumentProperties.Add("PopSzab",0,4," ")
-		template := oWord.ActiveDocument.CustomDocumentProperties["PopSzab"].Value
+		var_PopSzab := oWord.ActiveDocument.CustomDocumentProperties["PopSzab"].Value
 	}
-	if ((template == "PL") or (template == "EN"))
+	if ((var_PopSzab == "PL") or (var_PopSzab == "EN") or (var_PopSzab == "OldEN") or (var_PopSzab == "OldPL")) ;if there was already a template plugged in the file (we know this from PopSzab), it automatically sets the last template
 	{
 		gosub, AddTemplate
 	}
 	else
-		gosub, ChooseTemplate
+		gosub, ChooseTemplate ;if the file did not already have a template attached allows you to select a template
 	return
 
 AddTemplate:
@@ -1289,12 +1956,27 @@ AddTemplate:
 			oWord.ActiveDocument.AttachedTemplate := OurTemplatePL
 			oWord.ActiveDocument.UpdateStylesOnOpen := WordTrue
 			oWord.ActiveDocument.UpdateStyles
-			;MsgBox, 64, Informacja, % MsgText("Dołączono szablon!`nDołączono domyślny szablon dokumentu: `n") oWord.ActiveDocument.AttachedTemplate.FullName, 5
 			MsgBox, 64,, Dołączono szablon! 
 			OurTemplate := OurTemplatePL
 		}
 	}
-	else if (template == "EN")
+	if (template == "OldPL")
+	{
+		if (OurTemplate == OurTemplateOldPL)
+		{
+			oWord := ""
+			
+		}
+		else
+		{
+			oWord.ActiveDocument.AttachedTemplate := OurTemplateOldPL
+			oWord.ActiveDocument.UpdateStylesOnOpen := WordTrue
+			oWord.ActiveDocument.UpdateStyles
+			MsgBox, 64,, Dołączono szablon! 
+			OurTemplate := OurTemplateOldPL
+		}
+	}
+	if (template == "EN")
 	{
 		if (OurTemplate == OurTemplateEN)
 		{
@@ -1306,9 +1988,24 @@ AddTemplate:
 			oWord.ActiveDocument.AttachedTemplate := OurTemplateEN
 			oWord.ActiveDocument.UpdateStylesOnOpen :=  WordTrue
 			oWord.ActiveDocument.UpdateStyles
-			;MsgBox, 64, Informacja, % MsgText("Dołączono szablon!`nDołączono domyłlny szablon dokumentu: `n") oWord.ActiveDocument.AttachedTemplate.FullName, 5
 			MsgBox, 64,, The template is added!
 			OurTemplate := OurTemplateEN
+		}
+	}
+	if (template == "OldEN")
+	{
+		if (OurTemplate == OurTemplateOldEN)
+		{
+			oWord := ""
+			
+		}
+		else
+		{
+			oWord.ActiveDocument.AttachedTemplate := OurTemplateOldEN
+			oWord.ActiveDocument.UpdateStylesOnOpen :=  WordTrue
+			oWord.ActiveDocument.UpdateStyles
+			MsgBox, 64,, The template is added!
+			OurTemplate := OurTemplateOldEN
 		}
 	}
 	oWord.ActiveDocument.CustomDocumentProperties["PopSzab"] := template
@@ -1346,8 +2043,10 @@ ChooseTemplate:
 	{
 		Gui, Temp:New
 		Gui, Temp:Add, Text,, Choose template:
-		Gui, Temp:Add, Radio, vMyTemplate Checked, Polish template
-		Gui, Temp:Add, Radio,, English template
+		Gui, Temp:Add, Radio, vMyTemplate Checked, Polish template User Doc
+		Gui, Temp:Add, Radio,, English template User Doc
+		Gui, Temp:Add, Radio,, Polish template OgólnyTechDok
+		Gui, Temp:Add, Radio,, English template OgólnyTechDok
 		Gui, Temp:Add, Button, w200 gTempOK Default, OK
 		Gui, Temp:Show,, Add Template
 	}
@@ -1359,9 +2058,17 @@ TempOK:
 	{
 		template := "PL"
 	}
-	else if (MyTemplate == 2)
+	if (MyTemplate == 2)
 	{
 		template := "EN"
+	}
+	if (MyTemplate == 3)
+	{
+		template := "OldPL"
+	}
+	if (MyTemplate == 4)
+	{
+		template := "OldEN"
 	}
 	gosub, AddTemplate
 	return
@@ -1371,11 +2078,11 @@ BBOK:
 	Gui, BB:Submit, +OwnDialogs
 	Gui, BB:Destroy
 	if (FirstPage == 1)
-		BB_Insert("Strona ozdobna", "")
+		BB_Insert("Pierwsza strona zwykła", "")
 	if (ID == 1)
 		BB_Insert("identyfikator", "")
 	if (ChangeLog == 1)
-		BB_Insert("Lista zmian", "")
+		BB_Insert("Change log", "")
 	if (TOC == 1)
 	{
 		BB_Insert("Spis treści", "")
@@ -1401,7 +2108,7 @@ BBOK:
 	{
 		oWord := ComObjActive("Word.Application")
 		oWord.Selection.InsertBreak(wdSectionBreakNextPage := 2)
-		BB_Insert("OstatniaStronaObrazek", "")
+		BB_Insert("Okładka tył", "")
 	if (Intro == 1)
 	{
 		oWord := ComObjActive("Word.Application")
@@ -1415,13 +2122,10 @@ BBOK:
 	BB_Insert(Name_BB, AdditionalText)
 	{
 	global 
-	Name_BB := MsgText(Name_BB)
-	Base(AdditionalText)
 	oWord := ComObjActive("Word.Application")
-	;~ MsgBox, % oWord.ActiveDocument.AttachedTemplate.FullName
-	if  !( InStr(OurTemplate, "TQ-S402-pl_OgolnyTechDok.dotm") or InStr(OurTemplate, "TQ-S402-en_OgolnyTechDok.dotm") )
+	if  !(InStr(OurTemplate, OurTemplateEN) or InStr(OurTemplate, OurTemplatePL) or InStr(OurTemplate, OurTemplateOldPL) or InStr(OurTemplate, OurTemplateOldEN))
 		{
-		MsgBox, 16, % MsgText("Próba wstawienia bloku z szablonu"), % MsgText("Próbujesz wstawić blok konstrukcyjny przypisany do szablonu, ale szablon nie zostać jeszcze dołączony do tego pliku.`nNajpierw dołącz szablon, a nastepnie wywołaj ponownie tę funkcję.")
+		MsgBox, 16, Próba wstawienia bloku z szablonu, Próbujesz wstawić blok konstrukcyjny przypisany do szablonu, ale szablon nie zostać jeszcze dołączony do tego pliku.`nNajpierw dołącz szablon, a nastepnie wywołaj ponownie tę funkcję.
 		}
 	else
 		{
@@ -1431,1001 +2135,112 @@ BBOK:
 	oWord :=  "" ; Clear global COM objects when done with them
 	}
 return
-;--------------------------------------------------
-;-------------------------------------------------
 
-KeepassYes:
-	Menu, SubmenuKeepass, Check, Yes 
-	Menu, SubmenuKeepass, Uncheck, No 
-	F_KeePass("Yes")
-return
-
-KeepassNo:
-	Menu, SubmenuKeepass, Check, Yes 
-	Menu, SubmenuKeepass, Uncheck, No 
-	F_KeePass("No")
-return
-
-KeepassDesc:
-	Msgbox, Run the KeePass 2 application, by pressing {Shift} + {Ctrl} + k 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuKeepass, Check, Yes 
-		Menu, SubmenuKeepass, UnCheck, No 
-		F_KeePass("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuKeepass, Check, No
-		Menu, SubmenuKeepass, UnCheck, Yes  
-		F_KeePass("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-TopYes:
-	Menu, SubmenuTop, Check, Yes 
-	Menu, SubmenuTop, Uncheck, No 
-	F_Top("Yes")
-return
-
-TopNo:
-	Menu, SubmenuTop, Check, Yes 
-	Menu, SubmenuTop, Uncheck, No 
-	F_Top("No")
-return
-
-TopDesc:
-	Msgbox, Toggle window parameter always on top, by pressing {Ctrl} + {Windows} + {F8}
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuTop, Check, Yes 
-		Menu, SubmenuTop, UnCheck, No 
-		F_Top("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuTop, Check, No
-		Menu, SubmenuTop, UnCheck, Yes  
-		F_Top("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-F13yes:
-	Menu, SubF13, check, Yes 
-	Menu, SubF13, uncheck, No
-	F_F13("Yes")
-return
-
-F13no:
-	Menu, SubF13, check, No 
-	Menu, SubF13, uncheck, Yes
-	F_F13("No")
-return
-
-F13Desc:
-	MsgBox, Switch windows in the system tray, by pressing {F13} 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubF13, Check, Yes 
-		Menu, SubF13, UnCheck, No 
-		F_F13("Yes")
-		}
-		else, 
-		{
-		Menu, SubF13, Check, No
-		Menu, SubF13, UnCheck, Yes  
-		F_F13("No")
-		}
-return
-
-
-F14yes:
-	Menu, SubF14, check, Yes 
-	Menu, SubF14, uncheck, No
-	F_F14("Yes")
-return
-
-F14no:
-	Menu, SubF14, check, No 
-	Menu, SubF14, uncheck, Yes
-	F_F14("No")
-return
-
-F14Desc:
-	Msgbox, Immediately resets the hotstring recognizer, by pressing {F13}
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubF14, Check, Yes 
-		Menu, SubF14, UnCheck, No 
-		F_F14("Yes")
-		}
-		else, 
-		{
-		Menu, SubF14, Check, No
-		Menu, SubF14, UnCheck, Yes  
-		F_F14("No")
-		}
-return
-
-
-F15yes:
-	Menu, SubF15, check, Yes 
-	Menu, SubF15, uncheck, No
-	F_F15("Yes")
+;TEMPLATE (32) (33)
+;OFF (33)
+F_Button33()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Switch off added template, by pressing {Ctrl} + {Shift} + t.
+				)
 Return
+}
 
-F15no:
-	Menu, SubF15, check, No 
-	Menu, SubF15, uncheck, Yes
-	F_F15("No")
-return
-
-F15Desc:
-	Msgbox, Make a beep sound, by pressing {F15}
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
+F_Checkbox33()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check33 ;0, 1, -1
 		{
-		Menu, SubF15, Check, Yes 
-		Menu, SubF15, UnCheck, No 
-		F_F15("Yes")
+			Case 0:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^+t, F_mytemplateoff, off
+			Hotkey, IfWinActive
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Template Off
+		
+			Case 1:
+			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
+			Hotkey, ^+t, F_mytemplateoff, on  
+			Hotkey, IfWinActive
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Template Off
 		}
-		else, 
-		{
-		Menu, SubF15, Check, No
-		Menu, SubF15, UnCheck, Yes  
-		F_F15("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-TranspYes:
-	Menu, Submenukeys, Check, Yes
-	Menu, Submenukeys, UnCheck, No 
-	F_Transparency("Yes")
-return
+}
 
-TranspNo:
-	Menu, Submenukeys, Check, No
-	Menu, Submenukeys, UnCheck, Yes 
-	F_Transparency("No")
+F_mytemplateoff()
+{
+oWord := ComObjActive("Word.Application")
+OurTemplateOff := oWord.ActiveDocument.AttachedTemplate.FullName
+
+if (InStr(OurTemplate, OurTemplateEN) or InStr(OurTemplate, OurTemplatePL) or InStr(OurTemplate, OurTemplateOldPL) or InStr(OurTemplate, OurTemplateOldEN))
+{
+	oWord.ActiveDocument.AttachedTemplate := ""
+	oWord.ActiveDocument.UpdateStylesOnOpen := -1
+	MsgBox,0x40,, Szablon został odłączony.
+}
+oWord := ""
+return
+}
+;/////////////////////////////////////////////////////////////////// - RUN (34) (35) (36) (37) (38) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+;KEEPASS (34)
+F_Button34()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Run the KeePass 2 application, by pressing {Shift} + {Ctrl} + k 
+				)
 Return
-
-TranspDesc:
-	MsgBox, Toggle window transparency by prssing {Ctr} + {Windows} + {F9}
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, Submenukeys, Check, Yes 
-		Menu, Submenukeys, UnCheck, No 
-		F_Transparency("Yes")
-		}
-		else, 
-		{
-		Menu, Submenukeys, Check, No
-		Menu, Submenukeys, UnCheck, Yes  
-		F_Transparency("No")
-		}
-return
-;--------------------------------------------------
-;-------------------------------------------------
-ShutdownYES:
-	Menu,SubmenuShutdown, Check, Yes 
-	Menu, SubmenuShutdown, UnCheck, No
-	F_Shutdown("Yes")
-return
-
-ShutdownNO:
-	Menu,SubmenuShutdown, Check, No
-	Menu, SubmenuShutdown, UnCheck, Yes
-	F_Shutdown("No")
-return 
-
-ShutdownDesc:
-	MsgBox, `Shutdown system, by pressing a Multimedia key - Volume Mute or Ctrl + Shift + F3 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuShutdown, Check, Yes 
-		Menu, SubmenuShutdown, UnCheck, No 
-		F_Shutdown("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuShutdown, Check, No
-		Menu, SubmenuShutdown, UnCheck, Yes  
-		F_Shutdown("No")
-		}
-return
-
-;--------------------------------------------------
-;--------------------------------------------------
-RebootYES:
-	Menu,SubmenuReboot, Check, Yes 
-	Menu, SubmenuReboot, UnCheck, No
-	F_Reboot("Yes")
-return
-
-RebootNO:
-	Menu,SubmenuReboot, Check, No
-	Menu, SubmenuReboot, UnCheck, Yes
-	F_Reboot("No")
-return 
-
-RebootDesc:
-	MsgBox, Reboot by pressing a Multimedia key - Volume Up or Ctrl + Shift + F2 
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuReboot, Check, Yes 
-		Menu, SubmenuReboot, UnCheck, No 
-		F_Shutdown("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuReboot, Check, No
-		Menu, SubmenuReboot, UnCheck, Yes  
-		F_Shutdown("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-PaintYES:
-	Menu,SubmenuPaint, Check, Yes 
-	Menu, SubmenuPaint, UnCheck, No
-	F_Paint("Yes")
-return
-
-PaintNO:
-	Menu,SubmenuPaint, Check, No
-	Menu, SubmenuPaint, UnCheck, Yes
-	F_Paint("No")
-return 
-
-PaintDesc:
-	MsgBox, Run Paint application by pressing a Multimedia key - Media_Play_Pause
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuPaint, Check, Yes 
-		Menu, SubmenuPaint, UnCheck, No 
-		F_Paint("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuPaint, Check, No
-		Menu, SubmenuPaint, UnCheck, Yes  
-		F_Paint("No")
-		}
-return
-
-;--------------------------------------------------
-;--------------------------------------------------
-TotComYES:
-	Menu,SubmenuTotCom, Check, Yes 
-	Menu, SubmenuTotCom, UnCheck, No
-	F_TotalCommander("Yes")
-return
-
-TotComNO:
-	Menu,SubmenuTotCom, Check, No
-	Menu, SubmenuTotCom, UnCheck, Yes
-	F_TotalCommander("No")
-return 
-
-TotComDesc:
-	MsgBox, Run Total Commander application by pressing a Multimedia key - Media_Prev
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuTotCom, Check, Yes 
-		Menu, SubmenuTotCom, UnCheck, No 
-		F_TotalCommander("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuTotCom, Check, No
-		Menu, SubmenuTotCom, UnCheck, Yes  
-		F_TotalCommander("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-McsWordYES:
-	Menu,SubmenuMcsWord, Check, Yes 
-	Menu, SubmenuMcsWord, UnCheck, No
-	F_McsWord("Yes")
-return
-
-McsWordNO:
-	Menu,SubmenuMcsWord, Check, No
-	Menu, SubmenuMcsWord, UnCheck, Yes
-	F_McsWord("No")
-return 
-
-McsWordDesc:
-	MsgBox, Run Microsoft Word application by pressing a Multimedia key - Media_Next
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuMcsWord, Check, Yes 
-		Menu, SubmenuMcsWord, UnCheck, No 
-		F_McsWord("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuMcsWord, Check, No
-		Menu, SubmenuMcsWord, UnCheck, Yes  
-		F_McsWord("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-CapitalizeYES:
-	Menu, SubmenuCapitalize, Check, Yes 
-	Menu, SubmenuCapitalize, UnCheck, No
-	F_Capitalize("Yes")
-return
-
-CapitalizeNO:
-	Menu, SubmenuCapitalize, UnCheck, Yes
-	Menu, SubmenuCapitalize, Check, No 
-	F_Capitalize("No")
-return
-
-CapitalizeDesc:
-	MsgBox,
-	( 
-Author: Jakub Masiak`n
-Refactored by: Hanna Ziętak on 2022-01-05`n
-	Input: one or more words (eg. Dog/Dog is jumping)`n
-Shift+{F3} and selected sentence/word or a caret in the middle of a word`n
-	Output: Alters the first or all letters`n
-EXAMPLES:`n
-	Dog is jumping -> DOG IS JUMPING`n
-	Dog -> DOG`n
-	DOG IS JUMPING -> dog is jumping`n
-	DOG -> dog`n
-	dog is jumping -> Dog is jumping`n
-	dog -> Dog`n
-Shifts caret to the end.`n
-It works everywhere exept Word, because in Word Application this function already exists.`n
-	)
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuCapitalize, Check, Yes 
-		Menu, SubmenuCapitalize, UnCheck, No 
-		F_Capitalize("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuCapitalize, Check, No
-		Menu, SubmenuCapitalize, UnCheck, Yes  
-		F_Capitalize("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-PrintScreenYES:
-	Menu, SubmenuPrintScreen, Check, Yes 
-	Menu, SubmenuPrintScreen, UnCheck, No 
-	F_PrintScreen("Yes")
-return 
-
-PrintScreenNO:
-	Menu, SubmenuPrintScreen, Check, No 
-	Menu, SubmenuPrintScreen, UnCheck, Yes 
-	F_PrintScreen("No")
-return 
-
-PrintScreenDesc:
-	MsgBox, 
-	(
-Run applications: SnippingTool.exe (by pressing {Volume down} key → Multimedia keys)`n						
-Windows Printscreen application (by pressing {PrintScreen} key (https://support.microsoft.com/pl-pl/help/4488540/how-to-take-and-annotate-screenshots-on-windows-10)    
-	)    
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuPrintScreen, Check, Yes 
-		Menu, SubmenuPrintScreen, UnCheck, No 
-		F_PrintScreen("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuPrintScreen, Check, No
-		Menu, SubmenuPrintScreen, UnCheck, Yes  
-		F_PrintScreen("No")
-		}
-return   
-;--------------------------------------------------
-;--------------------------------------------------
-WindowSwitcherYes:
-	Menu, SubmenuWindowSwitcher, Check, Yes 
-	Menu, SubmenuWindowSwitcher, UnCheck, No 
-	F_WindowSwitcher("Yes")
-return 
-
-WindowSwitcherNO:
-	Menu, SubmenuWindowSwitcher, Check, No
-	Menu, SubmenuWindowSwitcher, UnCheck, Yes  
-	F_WindowSwitcher("No")
-return
-
-WindowSwitcherDesc: 
-	MsgBox, Switches between windows by pressing {Left Windows} key and {Left Alt} key, then you can move between windows by using left, right, up and down arrows  
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuWindowSwitcher, Check, Yes 
-		Menu, SubmenuWindowSwitcher, UnCheck, No 
-		F_WindowSwitcher("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuWindowSwitcher, Check, No
-		Menu, SubmenuWindowSwitcher, UnCheck, Yes  
-		F_WindowSwitcher("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-AltGrYES:
-	Menu, SubmenuAltGr, Check, Yes  
-	Menu, SubmenuAltGr, Uncheck, No 
-	F_AltGr("Yes")
-return
-
-AltGrNO:
-	Menu, SubmenuAltGr, Uncheck, Yes
-	Menu, SubmenuAltGr, Check, No  
-	F_AltGr("No")
-return
-
-AltGrDesc: 
-	Msgbox, Redirects AltGr -> context menu    (only in English keyboardLayout)
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuAltGr, Check, Yes 
-		Menu, SubmenuAltGr, UnCheck, No 
-		F_AltGr("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuAltGr, Check, No
-		Menu, SubmenuAltGr, UnCheck, Yes  
-		F_AltGr("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-SetEngKeyboardYES:
-	Menu, SubmenuSetEngKeyboard, Check, Yes 
-	Menu, SubmenuSetEngKeyboard, UnCheck, No
-	F_SetEngKeyboardMenu("Yes")
-return
-
-SetEngKeyboardNO:
-	Menu, SubmenuSetEngKeyboard, Check, No
-	Menu, SubmenuSetEngKeyboard, UnCheck, Yes
-	F_SetEngKeyboardMenu("No")
-return
-
-SetEngKeyboardDesc:
-	MsgBox, Change keyboard settings (from Polish keyboard to English keyboard)
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuSetEngKeyboard, Check, Yes 
-		Menu, SubmenuSetEngKeyboard, UnCheck, No 
-		F_SetEngKeyboardMenu("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuSetEngKeyboard, Check, No
-		Menu, SubmenuSetEngKeyboard, UnCheck, Yes  
-		F_SetEngKeyboardMenu("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-BrowserYes:
-	Menu, SubmenuBrowser, Check, Yes 
-	Menu, SubmenuBrowser, UnCheck, No 
-	F_BrowserMenu("Yes")
-return 
-
-BrowserNo:
-	Menu, SubmenuBrowser, UnCheck, Yes 
-	Menu, SubmenuBrowser, Check, No
-	F_BrowserMenu("No")
-return 
-
-BrowserDesc:
-	MsgBox,
-	(
-	 Runs links:
-chrome.exe https://translate.google.com/`n
-https://www.linkedin.com/feed/`n
-https://mail.google.com/mail/u/0/#inbox`n
-http://www.meteo.pl/`n 
-https://trello.com/b/5h4R58KL/organizacyjne`n
-https://team.voestalpine.net/SitePages/Home.aspx`n
-https://helpdesk.tens.pl/helpdesk/`n
-https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx`n
-https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx`n
-	https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx`n
-	)
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuBrowser, Check, Yes 
-		Menu, SubmenuBrowser, UnCheck, No 
-		F_BrowserMenu("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuBrowser, Check, No
-		Menu, SubmenuBrowser, UnCheck, Yes  
-		F_BrowserMenu("No")
-		}
-return
-;--------------------------------------------------
-;--------------------------------------------------
-ParenthesisYes:
-	Menu, SubmenuParenthesis, Check, Yes 
-	Menu, SubmenuParenthesis, UnCheck, No 
-	F_ParenthesisMenu("Yes")
-return
-
-ParenthesisNo:
-	Menu, SubmenuParenthesis, UnCheck, Yes
-	Menu, SubmenuParenthesis, Check, No
-	F_ParenthesisMenu("No")
-return 
-
-ParenthesisDesc:
-	MsgBox, After pressing keys like: {  [  (  `" , the closing symbols }  ]  ) `" will also appear. Aditionally a caret will jump between the parenthesis/quotation marks. It works also, when you have already written a text and want to put it between parenthesis/quotation marks. You have to select words and press parenthesis/quotation marks.
-	MsgBox, 4, ,Would you like to activate it?
-		IfMsgBox, Yes
-		{
-		Menu, SubmenuParenthesis, Check, Yes 
-		Menu, SubmenuParenthesis, UnCheck, No 
-		F_ParenthesisMenu("Yes")
-		}
-		else, 
-		{
-		Menu, SubmenuParenthesis, Check, No
-		Menu, SubmenuParenthesis, UnCheck, Yes  
-		F_ParenthesisMenu("No")
-		}
-return
-;--------------------------------------------------
-
-; End of Auto-execute Section: https://www.autohotkey.com/docs/Scripts.htm#auto
-
-#z::Menu, Tray, Show
-return
-;/////////////////////////////// - SECTION OF FUNCTIONS: BEGINNING - ////////////////////////////////////////
-Base(AdditionalText := "")
-{
-	AdditionalText := MsgText(AdditionalText)
-	tooltip, [F24]  %A_thishotKey% %AdditionalText%
-	SetTimer, TurnOffTooltip, -5000
-	return
 }
-;*************************************************************************
-MsgText(string)
+
+F_Checkbox34()
 {
-    vSize := StrPut(string, "CP0")
-    VarSetCapacity(vUtf8, vSize)
-    vSize := StrPut(string, &vUtf8, vSize, "CP0")
-    Return StrGet(&vUtf8, "UTF-8") 
-}
-;*************************************************************************
-F_ParenthesisMenu(MyArg)
-{
-    if (MyArg = "Yes")
-	{
-		Hotkey, ~{ , F_Parenthesis, On
-		Hotkey, ~" , F_Parenthesis, On
-		Hotkey, ~( , F_Parenthesis, On
-		Hotkey, ~[ , F_Parenthesis, On
-		;~ Hotkey, ~LButton Up, F_StoreClipboard(0.1), On	; for MS Word: 0.01 is too short, 0.1 worksS
-		Hotkey,     ~+Right Up,     F_Parenthesis, On	;;events related to keyboard; order matters!
-		Hotkey,     ~+Left Up,      F_Parenthesis, On
-		Hotkey,     ~^+Left Up,     F_Parenthesis, On
-		Hotkey,     ~^+Right Up,    F_Parenthesis, On
-        Hotkey,     ~LButton Up,    F_Parenthesis, On
-		IniWrite,   YES, VariousFunctions.ini, Menu memory, Parenthesis
-	}
-
-	if (MyArg = "No")
-	{
-		Hotkey, ~{ , F_Parenthesis, Off
-		Hotkey, ~" , F_Parenthesis, Off
-		Hotkey, ~( , F_Parenthesis, Off
-		Hotkey, ~[ , F_Parenthesis, Off
-		;~ Hotkey, ~LButton Up, F_Parenthesis(0.1), On	; for MS Word: 0.01 is too short, 0.1 works
-		Hotkey,      ~+Right Up,    F_Parenthesis, Off	;;events related to keyboard; order matters!
-		Hotkey,      ~+Left Up,     F_Parenthesis, Off
-		Hotkey,      ~^+Left Up,    F_Parenthesis, Off
-		Hotkey,      ~^+Right Up,   F_Parenthesis, Off 
-        Hotkey,      ~LButton Up,   F_Parenthesis, Off 
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Parenthesis
-    }
-
-}
-F_StoreClipboard(IsMouse*)
-{
-	global	;assume-global mode
-	local OldClipboard := ""
-	
-	OldClipBoard := ClipboardAll
-	Clipboard := ""
-	Send, ^c
-	if (IsMouse[1] != 0)
-		ClipWait, % IsMouse[1]
-	else
-		ClipWait
-	ToRemember := Clipboard
-	OutputDebug, % "ToRemember:" . A_Tab . ToRemember
-	Clipboard := OldClipBoard
-	OldClipBoard := ""
-}
-F_Parenthesis()
-{	
-    global 
-	local ThisHotkey := A_ThisHotkey, SelectedWords:= true, f_Parenthesis := false
-        ,  f_Cliboard := false
-        ,  OldClipboard := ""
-    static ToRemember := ""
-
-	; OutputDebug, tu jestem
-    if (InStr(ThisHotkey, "{"))
-        f_Parenthesis   := true
-    if (InStr(ThisHotkey, """"))
-        f_Parenthesis   := true
-    if (InStr(ThisHotkey, "("))
-        f_Parenthesis   := true
-    if (InStr(ThisHotkey, "["))
-        f_Parenthesis   := true
-
-    if (InStr(ThisHotkey, "+Right Up"))
-        f_Cliboard      := true
-    if (InStr(ThisHotkey, "+Left Up"))
-        f_Cliboard      := true
-    if (InStr(ThisHotkey, "^+Right Up"))
-       f_Cliboard       := true
-    if (InStr(ThisHotkey, "^+Left Up"))
-        f_Cliboard      := true
-    if (InStr(ThisHotkey, "LButton Up"))
-        f_Cliboard      := true
-
-	if (f_Parenthesis)
-    {
-	    ThisHotkey := SubStr(ThisHotkey, 0) ;extract last character
-        Switch ThisHotkey
-        {
-            Case "(":   
-                if (ToRemember)
-                {
-                    Send, % ToRemember . ")"
-                    ToRemember := ""
-                }
-                else
-                    Send, % ")" . "{Left}"
-
-            Case "[":
-                if (ToRemember)
-                {
-                    Send, % ToRemember . "]"
-                    ToRemember := ""
-                }
-                else
-                    Send, % "]" . "{Left}"
-
-            Case "{":   
-                if (ToRemember)
-                {
-                    Send, % ToRemember . "}"
-                    ToRemember := ""
-                }
-                else
-                    Send, % "{}}" . "{Left}"
-
-            Case """":   
-                if (ToRemember)
-                {
-                    Send, % ToRemember . """"
-                    ToRemember := ""
-                }
-                else
-                    Send, % """" . "{Left}"
-        }
-
-    }
-    f_Parenthesis := false
-
-    if (f_Cliboard)
-    {
-	    OldClipBoard := ClipboardAll
-	    Clipboard := ""
-	    Send, ^c
-	    ClipWait, 0.1
-	    ToRemember := Clipboard
-	    ; OutputDebug, % "ToRemember:" . A_Tab . ToRemember
-	    Clipboard := OldClipBoard
-	    OldClipBoard := ""
-    }
-}
-;*************************************************************************
-F_BrowserMenu(MyBroArg)
-{
-	if (MyBroArg = "Yes")
-	{
-		Run, chrome.exe https://translate.google.com/ https://www.linkedin.com/feed/ https://mail.google.com/mail/u/0/#inbox http://www.meteo.pl/ https://trello.com/b/5h4R58KL/organizacyjne https://team.voestalpine.net/SitePages/Home.aspx https://helpdesk.tens.pl/helpdesk/ https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Browser
-	}
-	if (MyBroArg = "No")
-	{
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Browser
-	}
-	return 
-}
-;*************************************************************************
-F_SetEngKeyboardMenu(MySetKeyArg)
-{
-	global	;assume-global mode
-	if (MySetKeyArg = "Yes")
+	global
+	Gui, Submit, NoHide 
+	Switch Check34 ;0, 1, -1
 		{
-			SetDefaultKeyboard(English_USA)
-			TrayTip, VariousFunctions.ahk, Keyboard style: English_USA, 5, 0x1 
-			IniWrite, YES, VariousFunctions.ini, Menu memory, Set English Keyboard
-		}	
-	
-	if (MySetKeyArg = "No")
-		{
-			SetDefaultKeyboard(PolishLanguage)
-			TrayTip, VariousFunctions.ahk, Keyboard style: PolishLanguage, 5, 0x1
-			IniWrite, NO, VariousFunctions.ini, Menu memory, Set English Keyboard
-		}			
-}
-;~ https://docs.microsoft.com/pl-pl/windows/win32/api/winuser/nf-winuser-systemparametersinfoa?redirectedfrom=MSDN
-SetDefaultKeyboard(LocaleID)
-{
-	static SPI_SETDEFAULTINPUTLANG := 0x005A, SPIF_SENDWININICHANGE := 2
-	WM_INPUTLANGCHANGEREQUEST := 0x50
-	
-	Language := DllCall("LoadKeyboardLayout", "Str", Format("{:08x}", LocaleID), "Int", 0)
-	VarSetCapacity(binaryLocaleID, 4, 0)
-	NumPut(LocaleID, binaryLocaleID)
-	DllCall("SystemParametersInfo", UINT, SPI_SETDEFAULTINPUTLANG, UINT, 0, UPTR, &binaryLocaleID, UINT, SPIF_SENDWININICHANGE)
-	
-	WinGet, windows, List
-	Loop % windows
-		{
-		PostMessage WM_INPUTLANGCHANGEREQUEST, 0, % Language, , % "ahk_id " windows%A_Index%
-		}
-}
-;*************************************************************************
-F_AltGr(MyAltArg)  ; redirects AltGr -> context menu; only in English keyboardLayout
-;Ralt::AppsKey ; redirects AltGr -> context menu
-{
-	if (MyAltArg = "Yes")
-	{
-		Hotkey, RAlt, F_JustAlt, On
-		IniWrite, YES, VariousFunctions.ini, Menu memory, AltGr
-	}
+			Case 0:
+			Hotkey, +^k, F_keepass2, off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, KeePass
 		
-	if (MyAltArg = "No")	
-	{
-		Hotkey, RAlt, F_JustAlt, Off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, AltGr
-	}
+			Case 1:
+			Hotkey, +^k, F_keepass2, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, KeePass
+		}
+}
 
-}
-F_JustAlt()
-{   
-Send, {AppsKey}
-}
-;*************************************************************************
-F_WindowSwitcher(MyWinSWi) ; calls for windows switcher
+F_keepass2()
 {
-	if (MyWinSwi = "Yes")
-	{
-		Hotkey,	LWin & LAlt, F_windowswitch, On 
-		Hotkey,	LAlt & LWin, F_windowswitch, On 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Window Switcher
-	}	
+	Run, C:\Program Files (x86)\KeePass Password Safe 2\KeePass.exe 
+}
+
+;MS WORD (35)
+F_Button35()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Run Microsoft Word application by pressing {Media_Next} → Multimedia keys
+				)
+Return
+}
+
+F_Checkbox35()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check35 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, Media_Next, F_MediaNext, Off
+	 		IniWrite, NO, VariousFunctions.ini, Menu memory, Microsoft Word
 		
-	if (MyWinSwi = "No")
-	{
-		 Hotkey, LAlt & LWin, F_windowswitch, Off  
-		 Hotkey, LWin & LAlt, F_windowswitch, Off  
-		 IniWrite, NO, VariousFunctions.ini, Menu memory, Window Switcher
-	}
-	
-}
-F_windowswitch()
-{
-		Send, {Ctrl Down}{LAlt Down}{Tab}{LAlt Up}{Ctrl Up}
-	return
-}
-;*************************************************************************
-F_PrintScreen(Myprtscn)  ;https://support.microsoft.com/pl-pl/help/4488540/how-to-take-and-annotate-screenshots-on-windows-10
-{
-	if (Myprtscn = "Yes")
-	{
-		Hotkey, PrintScreen, F_prtscn, on 
-		Hotkey, Volume_Down, F_voldown, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Print Screen 
-	}
-	if (Myprtscn = "No")
-	{
-		Hotkey, PrintScreen, F_prtscn, off 
-		Hotkey, Volume_Down, F_voldown, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Print Screen 
-	}
-}	
-F_prtscn()
-{ 
-	Send, {Shift Down}{LWin Down}s{Shift Up}{LWin Up}
-}
-
-F_voldown()  ; run Snipping Tool (Microsoft Windows operating system tool)
-{
-	tooltip, [%A_thishotKey%] Run system tool Snipping Tool
-	SetTimer, TurnOffTooltip, -5000
-	Run, %A_WinDir%\system32\SnippingTool.exe
-}
-;*************************************************************************
-F_Capitalize(MyCapslock)
-{
-#IfWinNotActive, ahk_exe WINWORD.EXE
-	if (MyCapslock = "Yes")
-	{
-		Hotkey, IfWinNotActive, ahk_exe WINWORD.EXE
-		Hotkey, +F3, ForceCapitalize
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Capitalize
-	}
-
-	if (MyCapslock = "No")
-	{
-		Hotkey, +F3, ForceCapitalize, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Capitalize
-	}
-
-}
-;*************************************************************************
-	;~ Author: Jakub Masiak
-				;~ Refactored by: Hanna Ziętak on 2022-01-05
- ;~ * 				Input: one or more words (eg. Dog/Dog is jumping)
- ;~ * 					Shift+{F3} and selected sentence/word or a caret in the middle of a word
- ;~ * 				Output: Alters the first or all letters 
- ;~ * 					EXAMPLES:
- ;~ * 						Dog is jumping -> DOG IS JUMPING 
- ;~ * 						Dog -> DOG 
- ;~ * 						DOG IS JUMPING -> dog is jumping 
- ;~ * 						DOG -> dog 
- ;~ * 						dog is jumping -> Dog is jumping 
- ;~ * 						dog -> Dog  
-				;~ shifts caret to the end 
-				;~ it works everywhere exept Word, because in Word Application this function already exists 
- ;~ */
-
-ForceCapitalize()	; by Jakub Masiak, revised by Hania Ziętak on 2021-12-20
-{
-	SelectWord := false												;Select Word := no (false)
-	OldClipboard := ClipboardAll									;save content of clipboard to variable OldClipboard 
-	Clipboard := ""													;clear content of clipboard
-	Send, ^c														;copy to clipboard (ctrl + c)
-	if (Clipboard = "")												;if clipboard is still empty, mark and copy word where caret is located
-	{
-		SelectWord := true											;Select Word := yes (true)
-		Send, {Ctrl Down}{left}{Shift Down}{Right}{Shift Up}{Ctrl Up}  ;mark entire word ; do przerobienia
-		Send, ^c														
-	}
-		ClipWait, 0														;wait until clipboard is full with anything
-	state := "FirstState"											;Initial state
-	Loop, Parse, Clipboard											;each character of Clipboard will be treated as a separate substring.
-	{
-		if A_LoopField is upper
-		{
-			if (state = "FirstState")
-			{
-				state := "UpperCaseState"							; "UpperCaseState" - a considered letter is uppercase 
-			}
+			Case 1:
+			Hotkey, Media_Next, F_MediaNext, On 
+	 		IniWrite, YES, VariousFunctions.ini, Menu memory, Microsoft Word
 		}
-		else if A_LoopField is lower
-		{
-			if (state = "FirstState")
-			{
-				state := "LowerCaseState"							; "LowerCaseState" - a considered letter is lowercase
-			}
-		}
-		if (state = "UpperCaseState")
-		{
-			if A_Loopfield is lower
-			{
-				state := "AfterUpperCaseState"  					; "AfterUpperCaseState" - a considered letter is after a uppercase letter 
-			}
-		}
-		if (state = "LowerCaseState")
-		{
-			if A_Loopfield is upper
-			{
-				state := "AfterUpperCaseState"
-			}
-		}
-	}																;end of loop  ; the script is exiting the loop with the last letter status 
-
-	if (state = "AfterUpperCaseState")
-	{
-		StringUpper, Clipboard, Clipboard
-	}
-	if (state = "UpperCaseState")
-	{
-		StringLower, Clipboard, Clipboard
-	}
-	if (state = "LowerCaseState")
-	{
-		FirstLetter := ""											; exit state of the loop  ; a previous letter (in a word) in second loop  
-		NotAgain  := true											; flag: preventing capitalizing next letters  
-		Loop, Parse, Clipboard										; this loop is for the case that we have a word or sentence with all small letters (eg. dog/dog is jumping) and the next case is one capital then all small letters (eg. Dog/Dog is jumping) 
-		{
-			WhoAmI := A_LoopField									; what is first or after the first letter: space, dot, end of line or next letter (which has to be small)
-			if (WhoAmI = A_Space)
-			{
-				FirstLetter := % FirstLetter . A_Space
-			}
-			else if (WhoAmI = ".") or (WhoAmI = "`n") 
-			{
-				NotAgain := true	
-				FirstLetter := FirstLetter . WhoAmI
-			}
-			else if (NotAgain = true) and (WhoAmI != A_Space)
-			{
-				StringUpper, WhoAmI, WhoAmI
-				NotAgain := false
-				FirstLetter := FirstLetter . WhoAmI
-			}
-			else
-			{
-				FirstLetter := FirstLetter . WhoAmI
-			}
-		}
-		Clipboard := FirstLetter			
-	}
-	StringLen, Length, Clipboard								; counts letters in selected sentence/ word 
-	Send, % "{Text}" . Clipboard
- 	Sleep, 100
-	Clipboard := OldClipboard
-return
-}
-;*************************************************************************
-F_McsWord(MyWord)
-{ 
-	if (MyWord="Yes")
-	{
-	 Hotkey, Media_Next, F_MediaNext, On 
-	 IniWrite, YES, VariousFunctions.ini, Menu memory, Microsoft Word
-	}
-	
-	if (MyWord="No")
-	{
-	 Hotkey, Media_Next, F_MediaNext, Off
-	 IniWrite, NO, VariousFunctions.ini, Menu memory, Microsoft Word
-
-	}
-
 }
 
 F_MediaNext()
@@ -2434,44 +2249,32 @@ F_MediaNext()
 	 SetTimer, TurnOffTooltip, -5000
 	 Run, WINWORD.EXE
 }
-;*************************************************************************
-F_TotalCommander(MyTotalCommander) ;run Total Commander app
-{
-	if (MyTotalCommander="Yes")
-	{
-		Hotkey, Media_Prev, F_MediaPrev, on
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Total Commander
-	}
 
-	if (MyTotalCommander="No")
-	{
-		Hotkey, Media_Prev, F_MediaPrev, Off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Total Commander
-	}
-	
+;PAINT (36)
+F_Button36()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Run Paint application by pressing {Media_Play_Pause} → Multimedia keys
+				)
+Return
 }
 
-F_MediaPrev()
+F_Checkbox36()
 {
-	tooltip, [%A_thishotKey%] Run twin-panel file manager Total Commander
-	SetTimer, TurnOffTooltip, -5000
-	Run, c:\totalcmd\TOTALCMD64.EXE 
-}
-;*************************************************************************
-F_Paint(MyPaint) ;run Paint app
-{
-	if (MyPaint="Yes")
-	{
-		Hotkey, Media_Play_Pause, F_MediaPlayPause, on
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Paint
-	}
-
-	if (MyPaint="No")
-	{
-		Hotkey, Media_Play_Pause, F_MediaPlayPause, Off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Paint
-	}
-	
+	global
+	Gui, Submit, NoHide 
+	Switch Check36 ;0, 1, -1
+		{
+			Case 0:
+			Hotkey, Media_Play_Pause, F_MediaPlayPause, Off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Paint
+		
+			Case 1:
+			Hotkey, Media_Play_Pause, F_MediaPlayPause, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Paint
+		}
 }
 
 F_MediaPlayPause()
@@ -2480,718 +2283,499 @@ F_MediaPlayPause()
 	SetTimer, TurnOffTooltip, -5000
 	Run, %A_WinDir%\system32\mspaint.exe
 }
-;*************************************************************************
-F_Reboot(MyReboot) ; Reboot
-{
-	if (MyReboot="Yes")
-	{
-		Hotkey, ^Volume_Up, F_volup, on
-		Hotkey, +^F2, F_volup, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Reboot
-	}
 
-	if (MyReboot="No")
-	{
-		Hotkey, ^Volume_Up, F_volup, Off
-		Hotkey, +^F2, F_volup, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Reboot
-	}
-	
-}
-F_volup()
+;TOTAL COMMANDER (37)
+F_Button37()
 {
- Shutdown, 2
- Msgbox, reboot!
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Run Total Commander application by pressing - {Media_Prev} → Multimedia keys
+				)
+Return
 }
-;*************************************************************************
-F_Shutdown(Myshutdown) ; Shutdown 
-{
-	if (Myshutdown="Yes")
-	{
-		Hotkey, ^Volume_Mute, F_volmute, On
-		Hotkey, +^F3, F_volmute, On
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Shutdown
-	}
 
-	if (Myshutdown="No")
-	{
-		Hotkey, ^Volume_Mute, F_volmute, Off
-		Hotkey, +^F3, F_volmute, Off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Shutdown
-	}
-	
-}
-F_volmute()
+F_Checkbox37()
 {
-Shutdown, 1 + 8
-Msgbox, power down!
-}
-;*************************************************************************
-F_Transparency(MyTransp) ;toggle window transparency
-{
-		if (MyTransp = "Yes")
+	global
+	Gui, Submit, NoHide 
+	Switch Check37 ;0, 1, -1
 		{
-			Hotkey, ^#F9, F_transp, on
-			IniWrite, YES, VariousFunctions.ini, Menu memory, Transparency 
+			Case 0:
+			Hotkey, Media_Prev, F_MediaPrev, Off
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Total Commander
+		
+			Case 1:
+			Hotkey, Media_Prev, F_MediaPrev, on
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Total Commander
 		}
-		if (MyTransp = "No")
-		{
-			Hotkey, ^#F9, F_transp, off
-			IniWrite, NO, VariousFunctions.ini, Menu memory, Transparency
-		}
-
 }
-F_transp()
+
+F_MediaPrev()
+{
+	tooltip, [%A_thishotKey%] Run twin-panel file manager Total Commander
+	SetTimer, TurnOffTooltip, -5000
+	Run, C:\Program Files\totalcmd\TOTALCMD64.EXE
+}
+
+;PRINT SCREEN (38)
+F_Button38()
+{
+Gui, Submit, NoHide
+	Msgbox, 
+				(
+Run applications:`nSnippingTool.exe, by pressing {Volume down} key → Multimedia keys.`nzWindows Printscreen application, by pressing {PrintScreen} key.
+				)
+Return
+}
+
+F_Checkbox38()
+{
+	global
+	Gui, Submit, NoHide 
+	Switch Check38 ;0, 1, -1
+		{
+			Case 0:
+				Hotkey, PrintScreen,	F_prtscn, 		off 
+				IniWrite, NO, VariousFunctions.ini, Menu memory, Print Screen 
+		
+			Case 1:
+				Hotkey, PrintScreen, 	F_prtscn, 		on 
+				IniWrite, YES, VariousFunctions.ini, Menu memory, Print Screen
+		}
+}
+
+
+F_prtscn()
 { 
-	global 
-	static WindowTransparency := false
-	if (WindowTransparency = false)
-		{
-		WinSet, Transparent, 125, A
-		WindowTransparency := true
-		ToolTip, This window atribut Transparency was changed to semi-transparent ;, % A_CaretX, % A_CaretY - 20
-		SetTimer, TurnOffTooltip, -2000
-		return
-		}
-	else
-		{
-		WinSet, Transparent, 255, A
-		WindowTransparency := false
-		ToolTip, This window atribut Transparency was changed to opaque ;, % A_CaretX, % A_CaretY - 20
-		;SetTimer, TurnOffTooltip, -2000
-		return
-		}
+	Send, {Shift Down}{LWin Down}s{Shift Up}{LWin Up}
 }
-;*************************************************************************
-F_F13(myf13)
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - SECTION OF FUNCTIONS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+F_IniRead()
 {
-	if (myf13="Yes")
+	global	;assume-global mode of operation
+
+	IniRead, ParenthesiIni, 		VariousFunctions.ini, 	Menu memory, Parenthesis, 			NO
+	IniRead, BrowserIni, 			VariousFunctions.ini, 	Menu memory, Browser, 				NO
+	IniRead, SetEnglishKeyboardIni, VariousFunctions.ini, 	Menu memory, Set English Keyboard, 	NO
+	IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, AltGr, 				NO
+	IniRead, WindowSwitcherIni, 	VariousFunctions.ini, 	Menu memory, Window Switcher, 		NO
+	IniRead, PrintScreenIni, 		VariousFunctions.ini, 	Menu memory, Print Screen, 			NO
+	IniRead, CapitalShiftIni, 		VariousFunctions.ini, 	Menu memory, Capitalize Shift, 		NO
+	IniRead, CapitalCapslIni, 		VariousFunctions.ini, 	Menu memory, Capitalize Capslock, 	NO
+	IniRead, MicrosoftWordIni, 		VariousFunctions.ini, 	Menu memory, Microsoft `Word, 		NO
+	IniRead, TotalCommanderIni, 	VariousFunctions.ini, 	Menu memory, Total Commander, 		NO
+	IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory, Paint, 				NO
+	IniRead, RebootIni, 			VariousFunctions.ini, 	Menu memory, Reboot, 				NO
+	IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory, Shutdown, 				NO
+	IniRead, TranspIni, 			VariousFunctions.ini, 	Menu memory, Transparency, 			NO
+	IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory, F13, 					NO
+	IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory, F14, 					NO
+	IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory, F15, 					NO
+	IniRead, TopIni,				VariousFunctions.ini, 	Menu memory, Always on top,			NO
+	IniRead, KeePassIni,			VariousFunctions.ini, 	Menu memory, KeePass,				NO
+	IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory, Hyperlink,				NO
+	IniRead, HideIni,				VariousFunctions.ini, 	Menu memory, Hidetext,				NO
+	IniRead, ShowIni,				VariousFunctions.ini, 	Menu memory, Showtext,				NO
+	IniRead, AddTemplateIni,		VariousFunctions.ini, 	Menu memory, Add Template,			NO
+	IniRead, TemplateOffIni,		VariousFunctions.ini, 	Menu memory, Template Off,			NO
+	IniRead, StrikethroIni, 		VariousFunctions.ini,   Menu memory, Strikethrough Text,    NO
+	IniRead, DeleteLineIni, 		VariousFunctions.ini,   Menu memory, Delete Line,    		NO
+	IniRead, AlignLeftIni, 			VariousFunctions.ini,   Menu memory, Align Left,    		NO
+	IniRead, ApplyStyleIni, 		VariousFunctions.ini,   Menu memory, Apply Styles,    		NO
+	IniRead, OpenPathIni, 			VariousFunctions.ini,   Menu memory, Open and Show Path,    NO
+	IniRead, TableIni, 				VariousFunctions.ini,   Menu memory, Table,    				NO
+	IniRead, SuspendIni,			VariousFunctions.ini,	Menu memory, Suspend,				NO
+	IniRead, VolumeIni,				VariousFunctions.ini,	Menu memory, Volume Up & Down,		NO
+	IniRead, BroWinSwiIni,			VariousFunctions.ini,	Menu memory, Browser Win Switcher,	NO
+	IniRead, TranspMouIni, 			VariousFunctions.ini,	Menu memory, Transparency Mouse,	NO
+	IniRead, AutosaveIni, 			VariousFunctions.ini,	Menu memory, Autosave,				NO
+	IniRead, ENtoPLini, 			VariousFunctions.ini,	Menu memory, ENtoPL,				NO
+	IniRead, PLtoENini, 			VariousFunctions.ini,	Menu memory, PLtoEN,				NO
+	IniRead, AutomatePaintini, 		VariousFunctions.ini,	Menu memory, AutomatePaint,			NO
+}
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+F_PrepareGuiElements()
+{
+	global	;assume-global mode of operation
+	Gui Font, s9, Segoe UI
+
+	Gui Add, Picture, 	x8 y8 w47 h47, C:\Repozytoria\companyTemplates\AutoHotKeyScripts\VariousFunctions\vh.ico
+	Gui Add, Text, 		x96 y16 w91 h15 +0x200 				 , CHOOSE YOUR
+	Gui Add, Text, 		x104 y32 w72 h17 +0x200 			 , FUNCTIONS
+	Gui Add, Button, 	x8 y64 w220 h41 ClassButton gF_About1 , About
+
+	Gui Add, GroupBox, 	x8 y104 w220 h303
+	Gui Add, CheckBox, 	x24 y120 w170 h23 vCheck1 gF_Checkbox1, Always on top
+	Switch TopIni
 	{
-		Hotkey, F13, F_f13key, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, F13
-	}
-	if (myf13="No")
-	{
-		Hotkey, F13, F_f13key, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, F13
+		Case "YES": GuiControl, , Check1, 1
+		Case "NO":	GuiControl, , Check1, 0
 	}
 
-}
-;0000000000000000
-F_f13key()
-{
-	Send, #t
-	SoundBeep, 1000, 200
-}
-;00000000000000000000000000000000000000
-F_F14(myf14)
-{
-	if (myf14="Yes")
-	{
-		Hotkey, F14, F_f14key, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, F14
-	}
-		if 	(myf14="No")
-	{
-		Hotkey, F14, F_f14key, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, F14
-	}
-}
-;0000000000000000
-F_f14key()
-{
-	msgbox, tu jestem 
-	Hotstring("Reset")
-	SoundBeep, 1500, 200 ; freq = 100, duration = 200 ms
-	ToolTip, [%A_thishotKey%] reset of AutoHotkey string recognizer, % A_CaretX, % A_CaretY - 20
-	SetTimer, TurnOffTooltip, -2000
-}
-;00000000000000000000000000000000000000
-F_F15(myf15)
-{
-	if (myf15="Yes")
-	{
-		Hotkey, F15, F_f15key, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, F15
-	}
-	if 	(myf15="No")
-	{
-		Hotkey, F15, F_f15key, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, F15
-	}
-}
-F_f15key()
-{
-	SoundBeep, 2000, 200
-}
-;*************************************************************************
-F_Top(myalways)
-{
-	if (myalways= "Yes")
-	{
-		Hotkey, ^#F8, F_always, on 
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Always on top
-	}
-	if (myalways= "No")
-	{
-		Hotkey, ^#F8, F_always, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Always on top
-	}
-}
-F_always()
-{
-	WinSet, AlwaysOnTop, toggle, A 
-	ToolTip, This window atribut "Always on Top" is toggled ;, % A_CaretX, % A_CaretY - 20
-	SetTimer, TurnOffTooltip, -2000
-return
-}
-;*************************************************************************
-F_KeePass(mykeepass)
-{
-	if (mykeepass= "Yes")
-	{
-		Hotkey, +^k, F_keepass2, on
-		IniWrite, YES, VariousFunctions.ini, Menu memory, KeePass
-	}
-	if (mykeepass= "No")
-	{
-		Hotkey, +^k, F_keepass2, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, KeePass
-	}
-}
-F_keepass2()
-{
-	Run, C:\Program Files (x86)\KeePass Password Safe 2\KeePass.exe 
-}
-;*************************************************************************
-F_Hyper(myhyper)
-{
-	if (myhyper= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^k, F_hiper, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Hyperlink
-	
-	}
-	if (myhyper= "No")
-	{
-		Hotkey, ^k, F_hiper, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Hyperlink
-	
-	}
-}
-F_hiper()
-{
-	Send, {LAlt Down}{Ctrl Down}h{Ctrl Up}{LAlt Up}
-}
-;*************************************************************************
-F_Hide(myhide)
-{
-	if (myhide= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, +^h, HideSelectedText, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Hidetext
-	
-	}
-	if (myhide= "No")
-	{
-		Hotkey, +^h, HideSelectedText, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Hidetext
-	
-	}
-}
-HideSelectedText() ; 2019-10-22 2019-11-08
-{
-	global oWord
-	global  WordTrue, WordFalse
+	Gui Add, Button, 	x200 y120 w22 h24 gF_Button1,	?
 
-	oWord := ComObjActive("Word.Application")
-	OurTemplate := oWord.ActiveDocument.AttachedTemplate.FullName
-	if (InStr(OurTemplate, "TQ-S402-pl_OgolnyTechDok.dotm") or InStr(OurTemplate, "TQ-S402-en_OgolnyTechDok.dotm"))
+	Gui Add, CheckBox, x24 y152 w170 h23 vCheck2 gF_Checkbox2, Automate Paint
+	Switch AutomatePaintIni
 	{
-		nazStyl := oWord.Selection.Style.NameLocal
-		if (nazStyl = "Ukryty ms")
-			Send, ^{Space}
-		else
-		{
-			language := oWord.Selection.Range.LanguageID
-			oWord.Selection.Paragraphs(1).Range.LanguageID := language
-			TemplateStyle("Ukryty ms")
-		}
+		Case "YES": GuiControl, , Check2, 1
+		Case "NO":	GuiControl, , Check2, 0
 	}
-	else
+
+	Gui Add, Button, x200 y152 w22 h24 gF_Button2, ?
+
+	Gui Add, CheckBox, x24 y184 w170 h23 vCheck3 gF_Checkbox3, Chrome tab switcher
+	Switch BroWinSwiIni
 	{
-		StateOfHidden := oWord.Selection.Font.Hidden
-		oWord.Selection.Font.Hidden := WordTrue
-		If (StateOfHidden == WordFalse)
-		{
-			oWord.Selection.Font.Hidden := WordTrue	
-			}
-		else
-		{
-			oWord.Selection.Font.Hidden := WordFalse
-		}
+		Case "YES": GuiControl, , Check3, 1
+		Case "NO":	GuiControl, , Check3, 0
 	}
-	
-	oWord := "" ; Clear global COM objects when done with them
+
+	Gui Add, Button, x200 y184 w22 h24 gF_Button3, ?
+
+	Gui Add, CheckBox, x24 y216 w170 h23 vCheck4 gF_Checkbox4, Open tabs in Chrome
+	Switch BrowserIni
+	{
+		Case "YES": GuiControl, , Check4, 1
+		Case "NO":	GuiControl, , Check4, 0
+	}
+
+	Gui Add, Button, x200 y216 w22 h24 gF_Button4, ?
+
+	Gui Add, CheckBox, x24 y248 w170 h23 vCheck5 gF_Checkbox5, Parenthesis watcher
+	Switch ParenthesisIni
+	{
+		Case "YES": GuiControl, , Check5, 1
+		Case "NO":	GuiControl, , Check5, 0
+	}
+
+	Gui Add, Button, x200 y248 w22 h24 gF_Button5, ?
+
+	Gui Add, CheckBox, x24 y280 w170 h23 vCheck6 gF_Checkbox6, US keybord
+	Switch SetEnglishKeyboardIni
+	{
+		Case "YES": GuiControl, , Check6, 1
+		Case "NO":	GuiControl, , Check6, 0
+	}
+
+	Gui Add, Button, x200 y280 w22 h24 gF_Button6, ?
+
+	Gui Add, CheckBox, x24 y312 w170 h23 vCheck7 gF_Checkbox7, Right-click context menu
+	Switch AltGrIni
+	{
+		Case "YES": GuiControl, , Check7, 1
+		Case "NO":	GuiControl, , Check7, 0
+	}
+
+	Gui Add, Button, x200 y312 w22 h24 gF_Button7, ?
+
+	Gui Add, CheckBox, x24 y344 w170 h23 vCheck8 gF_Checkbox8, Volume Up and Down
+	Switch VolumeIni
+	{
+		Case "YES": GuiControl, , Check8, 1
+		Case "NO":	GuiControl, , Check8, 0
+	}
+
+	Gui Add, Button, x200 y344 w22 h24 gF_Button8, ?
+
+	Gui Add, CheckBox, x24 y376 w170 h23 vCheck9 gF_Checkbox9, Window switcher
+	Switch WindowSwitcherIni
+	{
+		Case "YES": GuiControl, , Check9, 1
+		Case "NO":	GuiControl, , Check9, 0
+	}
+
+	Gui Add, Button, x200 y376 w22 h24 gF_Button9, ?
+
+	Gui Add, GroupBox, x8 y416 w219 h89, Capitalization switcher
+
+	Gui Add, CheckBox, x24 y440 w169 h23 vCheck10 gF_Checkbox10, Capslock
+	Switch CapitalCapsIni
+	{
+		Case "YES": GuiControl, , Check10, 1
+		Case "NO":	GuiControl, , Check10, 0
+	}
+
+	Gui Add, Button, x200 y440 w22 h24 gF_Button10, ?
+
+	Gui Add, CheckBox, x24 y472 w169 h23 vCheck11 gF_Checkbox11, Shift + F3
+	Switch CapitalShiftIni
+	{
+		Case "YES": GuiControl, , Check11, 1
+		Case "NO":	GuiControl, , Check11, 0
+	}
+
+	Gui Add, Button, x200 y472 w22 h24 gF_Button11, ?
+
+	Gui Add, GroupBox, x240 y32 w177 h128, Foot switch
+
+	Gui Add, CheckBox, x256 y56 w129 h23 vCheck12 gF_Checkbox12, F13
+	Switch F13Ini
+	{
+		Case "YES": GuiControl, , Check12, 1
+		Case "NO":	GuiControl, , Check12, 0
+	}
+
+	Gui Add, Button, x392 y56 w22 h24 gF_Button12, ?
+
+	Gui Add, CheckBox, x256 y88 w129 h23 vCheck13 gF_Checkbox13, F14
+	Switch F14Ini
+	{
+		Case "YES": GuiControl, , Check13, 1
+		Case "NO":	GuiControl, , Check13, 0
+	}
+
+	Gui Add, Button, x392 y88 w22 h24 gF_Button13, ?
+
+	Gui Add, CheckBox, x256 y120 w129 h23 vCheck14 gF_Checkbox14, F15
+	Switch F15Ini
+	{
+		Case "YES": GuiControl, , Check14, 1
+		Case "NO":	GuiControl, , Check14, 0
+	}
+
+	Gui Add, Button, x392 y120 w22 h24 gF_Button14, ?
+
+	Gui Add, GroupBox, x240 y168 w178 h100, Google translate
+
+	Gui Add, CheckBox, x256 y192 w129 h23 vCheck15 gF_Checkbox15, English → Polish
+	Switch ENtoPLIni
+	{
+		Case "YES": GuiControl, , Check15, 1
+		Case "NO":	GuiControl, , Check15, 0
+	}
+
+	Gui Add, Button, x392 y192 w22 h24 gF_Button15, ?
+
+	Gui Add, CheckBox, x256 y224 w129 h23 vCheck16 gF_Checkbox16, Polish → English
+	Switch PLtoENIni
+	{
+		Case "YES": GuiControl, , Check16, 1
+		Case "NO":	GuiControl, , Check16, 0
+	} 
+
+	Gui Add, Button, x392 y224 w22 h24 gF_Button16, ?
+
+	Gui Add, GroupBox, x240 y280 w177 h127, Power PC
+
+	Gui Add, CheckBox, x256 y312 w129 h23 vCheck17 gF_Checkbox17, Suspend
+	Switch SuspendIni
+	{
+		Case "YES": GuiControl, , Check17, 1
+		Case "NO":	GuiControl, , Check17, 0
+	} 
+
+	Gui Add, Button, x392 y312 w22 h24 gF_Button17, ?
+
+	Gui Add, CheckBox, x256 y344 w129 h23 vCheck18 gF_Checkbox18, Reboot
+	Switch RebootIni
+	{
+		Case "YES": GuiControl, , Check18, 1
+		Case "NO":	GuiControl, , Check18, 0
+	} 
+
+	Gui Add, Button, x392 y344 w22 h24 gF_Button18, ?
+
+	Gui Add, CheckBox, x256 y376 w129 h23 vCheck19 gF_Checkbox19, Shutdown
+	Switch ShutdownIni
+	{
+		Case "YES": GuiControl, , Check19, 1
+		Case "NO":	GuiControl, , Check19, 0
+	} 
+
+	Gui Add, Button, x392 y376 w22 h24 gF_Button19, ?
+
+	Gui Add, GroupBox, x240 y416 w178 h90, Transparency switcher
+
+	Gui Add, CheckBox, x256 y440 w131 h23 vCheck20 gF_Checkbox20, Mouse
+	Switch TransparencyMouIni
+	{
+		Case "YES": GuiControl, , Check20, 1
+		Case "NO":	GuiControl, , Check20, 0
+	} 
+
+	Gui Add, Button, x392 y440 w22 h24 gF_Button20, ?
+
+	Gui Add, CheckBox, x256 y472 w130 h23 vCheck21 gF_Checkbox21, Keys
+	Switch TransparencyIni
+	{
+		Case "YES": GuiControl, , Check21, 1
+		Case "NO":	GuiControl, , Check21, 0
+	} 
+
+	Gui Add, Button, x392 y472 w22 h24 gF_Button21, ?
+
+	Gui Add, GroupBox, x432 y32 w188 h474, Functions in MS WORD
+
+	Gui Add, CheckBox, x440 y56 w138 h23 vCheck22 gF_Checkbox22, Align Left
+	Switch AlignLeftIni
+	{
+		Case "YES": GuiControl, , Check22, 1
+		Case "NO":	GuiControl, , Check22, 0
+	}
+
+	Gui Add, Button, x584 y56 w22 h24 gF_Button22, ?  
+
+	Gui Add, CheckBox, x440 y88 w138 h23 vCheck23 gF_Checkbox23, Apply styles
+	Switch ApplyStyleIni
+	{
+		Case "YES": GuiControl, , Check23, 1
+		Case "NO":	GuiControl, , Check23, 0
+	} 
+
+	Gui Add, Button, x584 y88 w22 h24 gF_Button23, ?
+
+	Gui Add, CheckBox, x440 y120 w138 h23 vCheck24 gF_Checkbox24, Autosave
+	Switch AutosaveIni
+	{
+		Case "YES": GuiControl, , Check24, 1
+		Case "NO":	GuiControl, , Check24, 0
+	} 
+
+	Gui Add, Button, x584 y120 w22 h24 gF_Button24, ?
+
+	Gui Add, CheckBox, x440 y152 w138 h23 vCheck25 gF_Checkbox25, Delete Line
+	Switch DeleteLineIni
+	{
+		Case "YES": GuiControl, , Check25, 1
+		Case "NO":	GuiControl, , Check25, 0
+	} 
+
+	Gui Add, Button, x584 y152 w22 h24 gF_Button25, ?
+
+	Gui Add, Text, x440 y184 w138 h23 +0x200  , Hidden text
+
+	Gui Add, CheckBox, x480 y216 w99 h22 vCheck26 gF_Checkbox26, Hide
+	Switch HideIni
+	{
+		Case "YES": GuiControl, , Check26, 1
+		Case "NO":	GuiControl, , Check26, 0
+	} 
+
+	Gui Add, Button, x584 y216 w22 h24 gF_Button26, ?
+
+	Gui Add, CheckBox, x480 y248 w98 h22 vCheck27 gF_Checkbox27, Show
+	Switch ShowIni
+	{
+		Case "YES": GuiControl, , Check27, 1
+		Case "NO":	GuiControl, , Check27, 0
+	}  
+
+	Gui Add, Button, x584 y248 w22 h24 gF_Button27, ?
+
+	Gui Add, CheckBox, x440 y280 w138 h23 vCheck28 gF_Checkbox28, Hyperlink
+	Switch HyperIni
+	{
+		Case "YES": GuiControl, , Check28, 1
+		Case "NO":	GuiControl, , Check28, 0
+	} 
+
+	Gui Add, Button, x584 y280 w22 h24 gF_Button28, ?
+
+	Gui Add, CheckBox, x440 y312 w138 h23 vCheck29 gF_Checkbox29, Open and show path
+	Switch OpenPathIni
+	{
+		Case "YES": GuiControl, , Check29, 1
+		Case "NO":	GuiControl, , Check29, 0
+	} 
+
+	Gui Add, Button, x584 y312 w22 h24 gF_Button29, ?
+
+	Gui Add, CheckBox, x440 y344 w138 h23 vCheck30 gF_Checkbox30, Strikethrough text
+	Switch OpenPathIni
+	{
+		Case "YES": GuiControl, , Check30, 1
+		Case "NO":	GuiControl, , Check30, 0
+	} 
+
+	Gui Add, Button, x584 y344 w22 h24 gF_Button30, ?
+
+	Gui Add, CheckBox, x440 y376 w138 h23 vCheck31 gF_Checkbox31, Table
+	Switch TableIni
+	{
+		Case "YES": GuiControl, , Check31, 1
+		Case "NO":	GuiControl, , Check31, 0
+	} 
+
+	Gui Add, Button, x584 y376 w22 h24 gF_Button31, ?
+
+	Gui Add, Text, x440 y408 w138 h23 +0x200  , Template
+
+	Gui Add, CheckBox, x480 y440 w100 h24 vCheck32 gF_Checkbox32, Add template
+	Switch AddTemplateIni
+	{
+		Case "YES": GuiControl, , Check32, 1
+		Case "NO":	GuiControl, , Check32, 0
+	} 
+
+	Gui Add, Button, x584 y440 w22 h24 gF_Button32, ?
+
+	Gui Add, CheckBox, x480 y472 w102 h24 vCheck33 gF_Checkbox33, Template Off
+	Switch TemplateOffIni
+	{
+		Case "YES": GuiControl, , Check33, 1
+		Case "NO":	GuiControl, , Check33, 0
+	} 
+
+	Gui Add, Button, x584 y472 w22 h24 gF_Button33, ?    
+
+	Gui Add, GroupBox, x632 y32 w188 h183, Run . . .
+
+	Gui Add, CheckBox, x648 y56 w138 h23 vCheck34 gF_Checkbox34, KeePass
+	Switch KeePassIni
+	{
+		Case "YES": GuiControl, , Check34, 1
+		Case "NO":	GuiControl, , Check34, 0
+	} 
+
+	Gui Add, Button, x792 y56 w22 h24 gF_Button34, ?
+
+	Gui Add, CheckBox, x648 y88 w138 h23 vCheck35 gF_Checkbox35, MS Word
+	Switch MicrosoftWordIni
+	{
+		Case "YES": GuiControl, , Check35, 1
+		Case "NO":	GuiControl, , Check35, 0
+	} 
+
+	Gui Add, Button, x792 y88 w22 h24 gF_Button35, ?
+
+	Gui Add, CheckBox, x648 y120 w138 h24 vCheck36 gF_Checkbox36, Paint
+	Switch PaintIni
+	{
+		Case "YES": GuiControl, , Check36, 1
+		Case "NO":	GuiControl, , Check36, 0
+	} 
+
+	Gui Add, Button, x792 y120 w22 h24 gF_Button36, ?
+
+	Gui Add, CheckBox, x648 y152 w138 h24 vCheck37 gF_Checkbox37, Total Commander
+	Switch TotalCommanderIni
+	{
+		Case "YES": GuiControl, , Check37, 1
+		Case "NO":	GuiControl, , Check37, 0
+	} 
+
+	Gui Add, Button, x792 y152 w22 h24 gF_Button37, ?
+
+	Gui Add, CheckBox, x648 y184 w138 h23 vCheck38 gF_Checkbox38, Print Screen
+	Switch PrintScreenIni
+	{
+		Case "YES": GuiControl, , Check38, 1
+		Case "NO":	GuiControl, , Check38, 0
+	} 
+
+	Gui Add, Button, x792 y184 w22 h24 gF_Button38, ?
+
 }
-TemplateStyle(StyleName)
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+TurnOffTooltip()
 {
-	global OurTemplateEN, OurTemplatePL, oWord
-	StyleName := MsgText(StyleName)
-	Base(StyleName)
-	oWord := ComObjActive("Word.Application") 
-	;~ SoundBeep, 750, 500 ; to fajnie dzia�a
-	if  !(InStr(OurTemplate, "TQ-S402-pl_OgolnyTechDok.dotm") or InStr(OurTemplate, "TQ-S402-en_OgolnyTechDok.dotm"))
-		{
-		;~ MsgBox, % oWord.ActiveDocument.AttachedTemplate.FullName
-		MsgBox, 16, % MsgText("Próba wywołania stylu z szablonu"), % MsgText("Próbujesz wywołać styl przypisany do szablonu, ale szablon nie został jeszcze dołączony do tego pliku.`nNajpierw dołącz szablon, a następnie wywołaj ponownie tę funkcję.")
-		oWord := "" ; Clear global COM objects when done with them
-		return
-		}
-	else
-		{
-		oWord.Selection.Style := StyleName
-		oWord := "" ; Clear global COM objects when done with them
-		return
-		}
-}
-;*************************************************************************
-F_Show(myshow)
-{
-	if (myshow= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^*, ShowHiddenText, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Showtext
-	
-	}
-	if (myshow= "No")
-	{
-		Hotkey, ^*, ShowHiddenText, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Showtext
-	
-	}
-}
-ShowHiddenText(AdditionalText := "")
-;~ by Jakub Masiak
-{
-	global oWord
-	Base(AdditionalText)
-	oWord := ComObjActive("Word.Application")
-	HiddenTextState := oWord.ActiveWindow.View.ShowHiddenText
-	if (oWord.ActiveWindow.View.ShowAll = -1)
-	{
-		oWord.ActiveWindow.View.ShowAll := 0
-		oWord.ActiveWindow.View.ShowTabs := 0
-		oWord.ActiveWindow.View.ShowSpaces := 0
-		oWord.ActiveWindow.View.ShowParagraphs := 0
-		oWord.ActiveWindow.View.ShowHyphens := 0
-		oWord.ActiveWindow.View.ShowObjectAnchors := 0
-		oWord.ActiveWindow.View.ShowHiddenText := 0
-	}
-	else
-	{
-		oWord.ActiveWindow.View.ShowAll := -1
-		oWord.ActiveWindow.View.ShowTabs := -1
-		oWord.ActiveWindow.View.ShowSpaces := -1
-		oWord.ActiveWindow.View.ShowParagraphs := -1
-		oWord.ActiveWindow.View.ShowHyphens := -1
-		oWord.ActiveWindow.View.ShowObjectAnchors := -1
-		oWord.ActiveWindow.View.ShowHiddenText := -1
-	}
-	oWord := ""
+	Tooltip,
 	return
 }
-;*************************************************************************
-F_TemplateOff(mytemplateff)
-{
-	if (mytemplateff= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^+t, F_mytemplateoff, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Template Off
-	
-	}
-	if (mytemplateff= "No")
-	{
-		Hotkey, ^+t,  F_mytemplateoff, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Template Off
-	
-	}
-}
-F_mytemplateoff()
-{
-oWord := ComObjActive("Word.Application")
-OurTemplateOff := oWord.ActiveDocument.AttachedTemplate.FullName
-
-if (InStr(OurTemplateOff, "TQ-S440-pl_DokUzyt.dotm") or InStr(OurTemplateOff, "TQ-S440-en_UserDoc.dotm"))
-{
-	oWord.ActiveDocument.AttachedTemplate := ""
-	oWord.ActiveDocument.UpdateStylesOnOpen := -1
-	MsgBox,0x40,, % MsgText("Szablon został odłączony.")
-}
-oWord := ""
-return
-}
-;********************************************************************
-F_AddTemplate(myaddtemplate)
-{
-	if (myaddtemplate= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^t, F_myaddtemplate, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Add Template 
-	
-	}
-	if (myaddtemplate= "No")
-	{
-		Hotkey, ^t,  F_myaddtemplate, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Add Template
-	
-	}
-}
-F_myaddtemplate()
-{
-	gosub, AutoTemplate
-}
-;*************************************************************************
-F_Strikethrough(mystrikethro)
-{
-	if (mystrikethro= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^+x, StrikeThroughText, on  
-		IniWrite, YES, VariousFunctions.ini, Menu memory, Strikethrough Text
-	
-	}
-	if (mystrikethro= "No")
-	{
-		Hotkey, ^+x,  StrikeThroughText, off
-		IniWrite, NO, VariousFunctions.ini, Menu memory, Strikethrough Text
-	
-	}
-}
-StrikeThroughText()
-{
-	global oWord
-	global  WordTrue, WordFalse	
-
-	oWord := ComObjActive("Word.Application")
-	StateOfStrikeThrough := oWord.Selection.Font.StrikeThrough ; := wdToggle := 9999998 
-	if (StateOfStrikeThrough == WordFalse)
-		{
-		oWord.Selection.Font.StrikeThrough := wdToggle := 9999998
-		}
-	else
-		{
-		oWord.Selection.Font.StrikeThrough := 0
-		}
-	oWord :=  "" ; Clear global COM objects when done with them
-}
-;*************************************************************************
-F_DeleteLine(mydelete)
-{
-	if (mydelete= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^l, DeleteLineOfText, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Delete Line
-	}
-	if (mydelete= "No")
-	{
-		Hotkey, ^l, DeleteLineOfText, off 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Delete Line 
-	}
-}
-DeleteLineOfText() ; 2019-10-03
-{
-	global oWord
-	oWord := ComObjActive("Word.Application")
-	oWord.Selection.HomeKey(Unit := wdLine := 5)
-	oWord.Selection.EndKey(Unit := wdLine := 5, Extend := wdExtend := 1)
-	oWord.Selection.Delete(Unit := wdCharacter := 1, Count := 1)
-	oWord :=  "" ; Clear global COM objects when done with them
-}
-;*************************************************************************
-F_AlignLeft(myalign)
-{
-	if (myalign= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, +^l, F_myalignleft, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Align Left
-	}
-	if (myalign= "No")
-	{
-		Hotkey, +^l, F_myalignleft, off 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Align Left
-	}
-}
-F_myalignleft()
-{
-	Send, ^l
-}
-;*************************************************************************
-F_ApplyStyles(mystyle)
-{
-	if (mystyle= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, +^s, ToggleApplyStylesPane, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Apply Styles 
-	}
-	if (mystyle= "No")
-	{
-		Hotkey, +^s, ToggleApplyStylesPane, off 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Apply Styles 
-	}
-}
-ToggleApplyStylesPane()
-{
-	global oWord
-	global  WordTrue, WordFalse	
-	
-	oWord := ComObjActive("Word.Application")
-	; ApplyStylesTaskPane := oWord.CommandBars("Apply styles").Visible
-	ApplyStylesTaskPane := oWord.Application.TaskPanes(17).Visible
-	try
-	{	
-	If (ApplyStylesTaskPane = WordFalse)
-		oWord.Application.TaskPanes(17).Visible := WordTrue
-	Else If (ApplyStylesTaskPane = WordTrue)
-		oWord.CommandBars("Apply styles").Visible := WordFalse
-	}
-		catch
-	{
-		MsgBox,48,, % MsgText("Aby wywołać panel ""Stosowanie stylów"", zaznaczenie nie powinno zawierać kanwy rysunku.")
-		return
-	}
-	
-	oWord := ""
-}
-;*************************************************************************
-F_OpenPath(mypath)
-{
-	if (mystyle= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotkey, ^o, FullPath, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Open and Show Path
-	}
-	if (mystyle= "No")
-	{
-		Hotkey, ^o,  FullPath, off 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Open and Show Path
-	}
-}
-FullPath(AdditionalText := "") ; display full path to a file in window title bar 
-;~ by Jakub Masiak
-{
-	global oWord
-    Base(AdditionalText)
-	oWord := ComObjActive("Word.Application")
-    oWord.ActiveWindow.Caption := oWord.ActiveDocument.FullName
-    oWord := ""
-	Send, ^{o down}{o up}
-}
-;*************************************************************************
-F_Table(mytable)
-{
-	if (mytable= "Yes")
-	{
-		Hotkey, IfWinActive, ahk_exe WINWORD.EXE
-		Hotstring(":*:tabela`t", "| | |", "on")
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Table
-	}
-
-	if (mytable= "No")
-	{
-		Hotstring(":*:tabela`t", "| | |`n", "off") 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Table
-	}
-}
-;*************************************************************************
-F_Suspend(mysuspend)
-{
-	if (mysuspend= "Yes")
-	{
-		Hotkey, +^F1, F_mysuspend1, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Suspend
-	}
-	if (mysuspend= "No")
-	{
-		Hotkey, +^F1,  F_mysuspend1, off 
-		IniWrite, No, VariousFunctions.ini, Menu memory, Suspend
-	}
-}
-
-F_mysuspend1()
-{
-	DllCall("PowrProf\SetSuspendState", "int", 0, "int", 0, "int", 0)
-}
-;***************** ********************************************************
-F_Volume(myvolume)
-{
-	FuncObj := func("MouseIsOver").bind("ahk_class Shell_TrayWnd")
-	if (myvolume= "Yes") 
-	{
-		Hotkey, If, % FuncObj
-		; Hotkey, IfWinActive, ahk_class Shell_TrayWnd
-		Hotkey, WheelUp, 	F_mywheelup, 	on 
-		Hotkey, WheelDown, 	F_mywheeldown, 	on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Volume Up & Down
-	}
-	if (myvolume= "No")
-	{
-		Hotkey, WheelUp, 	F_mywheelup, 	off
-		Hotkey, WheelDown, 	F_mywheeldown, 	off
-		IniWrite, No, VariousFunctions.ini, Menu memory, Volume Up & Down
-	}
-	Hotkey, If	;call off Hotkey if
-}
-MouseIsOver(WinTitle)
-{
-	MouseGetPos,,, Win
-	return WinExist(WinTitle . " ahk_id " . Win)
-}
-F_mywheelup()
-{
-	Send {Volume_up}
-}
-F_mywheeldown()
-{
-	Send {Volume_down}
-}
-;***************** ********************************************************
-F_BroWinSwi(mybrowinswi)
-{
-	if (mybrowinswi= "Yes")
-	{
-		Hotkey, Xbutton1, F_mybutton1, on 
-		Hotkey, Xbutton2, F_mybutton2, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Browser Win Switcher 				
-	}
-	if (mybrowinswi= "No")
-	{
-		Hotkey, Xbutton1, F_mybutton1, off
-		Hotkey, Xbutton2, F_mybutton2, off
-		IniWrite, No, VariousFunctions.ini, Menu memory, Browser Win Switcher
-	}
-}
-
-F_mybutton1()
-{
-	if !WinExist("ahk_class Chrome_WidgetWin_1")
-		{
-		Run, chrome.exe
-		}
-	if WinActive("ahk_class Chrome_WidgetWin_1") or WinActive("ahk_class TTOTAL_CMD")
-		{
-		Send, ^+{Tab}
-		}
-	else
-		{
-		WinActivate ahk_class Chrome_WidgetWin_1
-		}
-return	
-}
-
-F_mybutton2()
-{
-		if !WinExist("ahk_class Chrome_WidgetWin_1")
-		{
-		Run, chrome.exe
-		}
-	if WinActive("ahk_class Chrome_WidgetWin_1")  or WinActive("ahk_class TTOTAL_CMD")
-		{
-		Send, ^{Tab}
-		}
-	else
-		{
-		WinActivate ahk_class Chrome_WidgetWin_1
-		}
-return
-}
-;***************** ********************************************************
-F_TransparencyMou(mytransmouse)
-{
-	if (mytransmouse= "Yes")
-	{
-		Hotkey, ^+WheelDown, F_MouseTranspdown, on 
-		Hotkey, ^+WheelUp, F_MouseTranspup, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Tranparency Mouse
-	}
-	if (mytransmouse= "No")
-	{
-		Hotkey, ^+WheelDown, F_MouseTranspdown, off
-		Hotkey, ^+WheelUp, F_MouseTranspup, off
-		IniWrite, No, VariousFunctions.ini, Menu memory, Tranparency Mouse
-	}
-}
-
-F_MouseTranspdown()
-{
- TransFactor := TransFactor - 25.5
-    if (TransFactor < 0)
-        TransFactor := 0
-    WinSet, Transparent, %TransFactor%, A
-    TransProc := Round(100*TransFactor/255)
-    ToolTip, Transparency set to %TransProc%`%
-    SetTimer, TurnOffTooltip, -500
-    Return 
-}
-
-F_MouseTranspup()
-{
-	TransFactor := TransFactor + 25.5
-    if (TransFactor > 255)
-        TransFactor := 255
-    WinSet, Transparent, %TransFactor%, A  
-    TransProc := Round(100*TransFactor/255)
-    ToolTip, Transparency set to %TransProc%`%
-    SetTimer, TurnOffTooltip, -500
-    Return
-}
-
-F_Autosave(myautosave)
-{
-	if (myautosave= "Yes")
-	{
-		Hotkey,<!^q, F_myautosave, on 
-		IniWrite, Yes, VariousFunctions.ini, Menu memory, Autosave
-	}
-	if (myautosave= "No")
-	{
-		Hotkey,<!^q, F_myautosave, off
-		IniWrite, No, VariousFunctions.ini, Menu memory, Autosave
-	}
-}
-
-
-F_myautosave()
-{
-	if (flag_as = 0)
-	{
-		SetTimer, AutoSave, Off
-		TrayTip, %A_ScriptName%, Autozapis został wyłączony!, 5, 0x1
-		flag_as := 1
-	}
-	else if (flag_as = 1)
-	{
-		SetTimer, AutoSave, On
-		TrayTip, %A_ScriptName%, Autozapis został ponownie włączony!, 5, 0x1
-		flag_as := 0
-		return
-	}
-}
-
-
-
-
-; ;~ https://jacks-autohotkey-blog.com/2020/03/09/auto-capitalize-the-first-letter-of-sentences/#more-41175
-; CapitalizeFirstLetters()  ; czy ta funkcja jest jeszcze potrzebna?
-
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
