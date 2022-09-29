@@ -1,9 +1,9 @@
 # **VariousFunctions**
 Collection of small AutoHotkey functions. Configurable on/off.
 
-![GUI_variousfunctions](https://user-images.githubusercontent.com/109993935/191761960-4b8600cc-db34-4116-b645-33a3f20ec3a4.png)
-
 > :bulb: **Tip:** Open GUI window by pressing *{Ctrl}+{Shift}+v* and close it by *{Esc}.*
+
+![GUI_variousfunctions](https://user-images.githubusercontent.com/109993935/191761960-4b8600cc-db34-4116-b645-33a3f20ec3a4.png)
 ___
 
 ## Short descriptions for each functions:
@@ -18,24 +18,17 @@ ___
 	"save as" in Paint App by pressing {F5}.	
 
 ### Chrome tab switcher
-	Switch tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2}.
+	Switch tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2}
 
 ### Open tabs in Chrome 
-	Run links:
-
-	- https://translate.google.com/
-	- https://www.linkedin.com/feed/
-	- https://mail.google.com/mail/u/0/#inbox
-	- http://www.meteo.pl/
-	- https://trello.com/b/5h4R58KL/organizacyjne
-	- https://team.voestalpine.net/SitePages/Home.aspx
-	- https://helpdesk.tens.pl/helpdesk/
-	- https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx	 
+	Click „?” symbol and type up to 10 links in edit controls to open in Chrome. 
+	You can edit them at any time from here.
 
 ### Parenthesis watcher
 	After pressing keys like: {  [  (  `" , the closing symbols }  ]  ) `" will also appear. 
 	Aditionally a caret will jump between the parenthesis/quotation marks. 
-	It works also, when you have already written a text and want to put it between parenthesis/quotation marks. 
+	It works also, when you have already written a text and want to put it between 
+	parenthesis/quotation marks. 
 	You have to select words and press parenthesis/quotation marks.
 
 ### US Keyboard Switcher
