@@ -1,11 +1,11 @@
+#Requires AutoHotkey v1.1.33+ 	; Displays an error and quits if a version requirement is not met. 
 #SingleInstance force 			; only one instance of this script may run at a time!
 #NoEnv  						; Recommended for performance and compatibility with future AutoHotkey releases.
-;~ #Warn  							; Enable warnings to assist with detecting common errors.
 #Persistent
 SendMode Input  				; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%		; Ensures a consistent starting directory.
 
-Menu, Tray,Icon, % A_SCriptDir . "\vh.ico" 
+Menu, Tray,Icon, % A_SCriptDir . "\vh.ico"  
 
 #include %A_ScriptDir%\Lib\UIA_Interface.ahk
 
@@ -21,7 +21,6 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 , OurTemplateOldEN		:= "S:\OrgFirma\Szablony\Word\OgolneZmakrami\TQ-S402-en_OgolnyTechDok.dotm"
 , OurTemplate 			:= ""
 ;---------------- Zmienne do funkcji autozapisu ----------------
-; , flag_as 				:= 0
 , size 					:= 0
 , size_org 				:= 0
 , table					:= []
@@ -38,54 +37,52 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 , ToRemember 			:= "", OldClipBoard := ""
 ;------------------- SECTION OF GLOBAL VARIABLES: END---------------------------- 
 
-
-
 ;/////////////////////////////// - INI SECTION - //////////////////////////////////////
 F_IniRead()
 
 ;//////////////////////////////////////////////////////////////// - PREPARATION OF GUI ELEMENTS - //////////////////////////////////////////////////////////////////////////////////////////////////////////
 F_PrepareGuiElements()
-
+F_PrepareOpenTabsGui()
 
 ;//////////////////////////////////////////////////////////////// - ACTIVATION OF SELECTED FUNCTIONS - //////////////////////////////////////////////////////////////////////////////////////////////////////////
-F_Checkbox1() ;Always on top
-F_Checkbox2() ;Automate Paint
-F_Checkbox3() ;Chrome tab switcher
-F_Checkbox4() ;Open tabs in Chrome
-F_Checkbox5() ;Parenthesis watcher
-F_Checkbox6() ;US Keyboard
-F_Checkbox7() ;Right click context menu
-F_Checkbox8() ;Volume up and down
-F_Checkbox9() ;Window switcher
-F_Checkbox10() ;Capitalization switcher CAPS LOCK
-F_Checkbox11() ;Capitalization switcher SHIFT +F3
-F_Checkbox12() ;FOOTSWITCH F13
-F_Checkbox13() ;FOOTSWITCH F14
-F_Checkbox14() ;FOOTSWITCH F15
-F_Checkbox15() ;Google translate en - pl
-F_Checkbox16() ;Google translate pl - en
-F_Checkbox17() ;Power PC suspend 
-F_Checkbox18() ;Power PC reboot
-F_Checkbox19() ;Powe PC shutdown
-F_Checkbox20() ;Transparency switcher - mouse
-F_Checkbox21() ;Transparency switcher - keys
-F_Checkbox22() ;Align left
-F_Checkbox23() ;Apply styles
-F_Checkbox24() ;Autosave
-F_Checkbox25() ;Delete line
-F_Checkbox26() ;Hide
-F_Checkbox27() ;Show
-F_Checkbox28() ;Hyperlink
-F_Checkbox29() ;Open and show path    
-F_Checkbox30() ;Strikethrough text
-F_Checkbox31() ;Table
-F_Checkbox32() ;Add template
-F_Checkbox33() ;Template off
-F_Checkbox34() ;Run KeePass
-F_Checkbox35() ;Run MS Word
-F_Checkbox36() ;Run Paint
-F_Checkbox37() ;Run Total Commander
-F_Checkbox38() ;Run print screen
+F_CB1_AlwaysOnTop() ;Always on top
+F_CB2_AutomatePaint() ;Automate Paint
+F_CB3_ChromeTabSwitcher() ;Chrome tab switcher
+F_CB4_OpenTabs() ;Open tabs in Chrome
+F_CB5_ParenthesisWatcher() ;Parenthesis watcher
+F_CB6_USKeyboard() ;US Keyboard
+F_CB7_RightClick() ;Right click context menu
+F_CB8_VolumeUpDown() ;Volume up and down
+F_CB9_WindowSwitcher() ;Window switcher
+F_CB10_CAPSLOCK() ;Capitalization switcher CAPS LOCK
+F_CB11_SHIFTF3() ;Capitalization switcher SHIFT +F3
+F_CB12_FootswitchF13() ;FOOTSWITCH F13
+F_CB13_FootswitchF14() ;FOOTSWITCH F14
+F_CB14_FootswitchF15() ;FOOTSWITCH F15
+F_CB15_TranslateEN_PL() ;Google translate en - pl
+F_CB16_TranslatePL_EN() ;Google translate pl - en
+F_CB17_Suspend() ;Power PC suspend 
+F_CB18_Reboot() ;Power PC reboot
+F_CB19_Shutdown() ;Powe PC shutdown
+F_CB20_TransparencyMouse() ;Transparency switcher - mouse
+F_CB21_TransparencyKeys() ;Transparency switcher - keys
+F_CB22_AlignLeft() ;Align left
+F_CB23_ApplyStyles() ;Apply styles
+F_CB24_Autosave() ;Autosave
+F_CB25_DeleteLine() ;Delete line
+F_CB26_Hide() ;Hide
+F_CB27_Show() ;Show
+F_CB28_HyperLink() ;Hyperlink
+F_CB29_OpenAndShowPath() ;Open and show path    
+F_CB30_StrikethroughText() ;Strikethrough text
+F_CB31_Table() ;Table
+F_CB32_AddTemplate() ;Add template
+F_CB33_TemplateOff() ;Template off
+F_CB34_KeePass() ;Run KeePass
+F_CB35_MSWord() ;Run MS Word
+F_CB36_Paint() ;Run Paint
+F_CB37_TotalCommander() ;Run Total Commander
+F_CB38_PrintScreen() ;Run print screen
 
 if (AutosaveIni)
 	F_AutoSave()
@@ -99,7 +96,7 @@ if (AutosaveIni)
 return	;End of initialization
 
 ;////////////////////////////////////////////////////////////////////////// - GUI - /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-+^v::
+~+^v::
 ChooseFunctions:
 	GUI, submit, Hide
 	Gui Show, w833 h512, Various functions
@@ -107,7 +104,6 @@ Return  ;end of auto-execute section
 
 
 GuiEscape:
-; :ButtonOK
 	GUI, submit, Hide
 	Gui, Hide
 Return
@@ -119,7 +115,7 @@ F_About1()
 	MsgBox,
 		(
 Authors:`nMaciej Słojewski, Hanna Ziętak, Jakub Masiak, Kasandra Krajewska`n`nInterface Author:`nKasandra Krajewska`n`nVersion: 1.1.2
-				)
+		)
 Return
 }
 
@@ -128,18 +124,17 @@ F_Button1()
 {
 	Gui, submit, NoHide
 	Msgbox, 
-				(
+		(
 Toggle window parameter always on top, by pressing {Ctrl} + {Windows} + {F8}.
-				)
+		)
 Return
 }
 
 
-F_Checkbox1()
+F_CB1_AlwaysOnTop()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
-	; Switch TopIni ;0, 1, -1
 	Switch Check1 ;0, 1, -1
 	{
 		Case 0:
@@ -168,15 +163,15 @@ F_Button2()
 {
 	Gui, Submit, NoHide
 	Msgbox, 
-				(
+		(
 Rotate image by pressing F2, 
 resize image by pressing F3, 
 choose red rectangle by pressing F4, 
 "save as" by pressing F5.
-				)
+		)
 }
 
-F_Checkbox2()
+F_CB2_AutomatePaint()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -288,7 +283,7 @@ ReturnSwitch tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2
 Return
 }
 
-F_Checkbox3()
+F_CB3_ChromeTabSwitcher()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -297,13 +292,13 @@ F_Checkbox3()
 			Case 0:
 			Hotkey, Xbutton1, F_mybutton1, off
 			Hotkey, Xbutton2, F_mybutton2, off
-			IniWrite, No, VariousFunctions.ini, Menu memory, Browser Win Switcher
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Browser Win Switcher
 		
 
 			Case 1:
 			Hotkey, Xbutton1, F_mybutton1, on 
 			Hotkey, Xbutton2, F_mybutton2, on 
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Browser Win Switcher
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Browser Win Switcher
 		}
 }
 
@@ -344,26 +339,27 @@ return
 ;/////////////////////////////////////////////////////////////////// - OPEN TABS IN CHROME (4) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 F_Button4()
 {
-	Gui, Submit, NoHide
-	Msgbox, 
-				(
-Runs links:`n
-https://translate.google.com/`n
-https://group.voestalpine.net/EN/Pages/deepl.aspx`n
-https://www.linkedin.com/feed/`n
-https://mail.google.com/mail/u/0/#inbox`n
-https://trello.com/b/5h4R58KL/organizacyjne`n
-https://team.voestalpine.net/SitePages/Home.aspx`n
-https://helpdesk.tens.pl/helpdesk/`n
-https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx`n
-https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx`n
-https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx`n
-http://www.meteo.pl/`n
-				)
-Return
+	global 
+	Gui OpenTabs: Show, w318 h395, Open tabs in Chrome
 }
 
-F_Checkbox4()
+F_SAVE()
+{
+	global
+	Gui, OpenTabs: Submit, Hide
+	IniWrite, % Tab1,	VariousFunctions.ini, OpenTabs,	Tab1
+	IniWrite, % Tab2,	VariousFunctions.ini, OpenTabs,	Tab2
+	IniWrite, % Tab3,	VariousFunctions.ini, OpenTabs,	Tab3
+	IniWrite, % Tab4,	VariousFunctions.ini, OpenTabs,	Tab4
+	IniWrite, % Tab5,	VariousFunctions.ini, OpenTabs,	Tab5
+	IniWrite, % Tab6,	VariousFunctions.ini, OpenTabs,	Tab6
+	IniWrite, % Tab7,	VariousFunctions.ini, OpenTabs,	Tab7
+	IniWrite, % Tab8,	VariousFunctions.ini, OpenTabs,	Tab8
+	IniWrite, % Tab9,	VariousFunctions.ini, OpenTabs,	Tab9
+	IniWrite, % Tab10,	VariousFunctions.ini, OpenTabs,	Tab10 
+}
+
+F_CB4_OpenTabs()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -373,7 +369,7 @@ F_Checkbox4()
 			IniWrite, NO, VariousFunctions.ini, Menu memory, Browser
 		
 			Case 1:
-			Run, chrome.exe https://translate.google.com/ https://group.voestalpine.net/EN/Pages/deepl.aspx https://www.linkedin.com/feed/ https://mail.google.com/mail/u/0/#inbox http://www.meteo.pl/ https://trello.com/b/5h4R58KL/organizacyjne https://team.voestalpine.net/SitePages/Home.aspx https://helpdesk.tens.pl/helpdesk/ https://portal-signaling-poland.voestalpine.net/synergy/docs/Portal.aspx https://solidsystemteamwork.voestalpine.root.local/internalprojects/vaSupp/CPS/SitePages/Home.aspx https://solidsystemteamwork.voestalpine.root.local/Processes/custprojects/780MDSUpgradeKit/SitePages/Home.aspx 
+			Run, % "chrome.exe" . A_space . Temp1
 			WinWait, ahk_class Chrome_WidgetWin_1 ahk_exe chrome.exe
 			WinMaximize, 
 			IniWrite, YES, VariousFunctions.ini, Menu memory, Browser
@@ -392,29 +388,29 @@ Return
 }
 
 
-F_Checkbox5()
+F_CB5_ParenthesisWatcher()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide
 	Switch Check5 ;0, 1, -1
 		{
 			Case 0:
-			Hotkey, ~{ , F_Parenthesis, Off
-			Hotkey, ~" , F_Parenthesis, Off
-			Hotkey, ~( , F_Parenthesis, Off
-			Hotkey, ~[ , F_Parenthesis, Off
-			Hotkey,      ~+Right Up,    F_Parenthesis, Off	;;events related to keyboard; order matters!
+			Hotkey, 	~{ , 			F_Parenthesis, Off
+			Hotkey, 	~" , 			F_Parenthesis, Off
+			Hotkey, 	~( , 			F_Parenthesis, Off
+			Hotkey, 	~[ , 			F_Parenthesis, Off
+			Hotkey,      ~+Right Up,    F_Parenthesis, Off	;events related to keyboard; order matters!
 			Hotkey,      ~+Left Up,     F_Parenthesis, Off
 			Hotkey,      ~^+Left Up,    F_Parenthesis, Off
 			Hotkey,      ~^+Right Up,   F_Parenthesis, Off 
 			IniWrite, NO, VariousFunctions.ini, Menu memory, Parenthesis
 
 			Case 1:
-			Hotkey, ~{ , F_Parenthesis, On
-			Hotkey, ~" , F_Parenthesis, On
-			Hotkey, ~( , F_Parenthesis, On
-			Hotkey, ~[ , F_Parenthesis, On		
-			Hotkey,     ~+Right Up,     F_Parenthesis, On	;;events related to keyboard; order matters!
+			Hotkey, 	~{ , 			F_Parenthesis, On
+			Hotkey, 	~" ,			F_Parenthesis, On
+			Hotkey, 	~( , 			F_Parenthesis, On
+			Hotkey, 	~[ , 			F_Parenthesis, On		
+			Hotkey,     ~+Right Up,     F_Parenthesis, On	;events related to keyboard; order matters!
 			Hotkey,     ~+Left Up,      F_Parenthesis, On
 			Hotkey,     ~^+Left Up,     F_Parenthesis, On
 			Hotkey,     ~^+Right Up,    F_Parenthesis, On
@@ -548,7 +544,7 @@ Change keyboard settings (from Polish keyboard to English keyboard)
 Return
 }
 
-F_Checkbox6()
+F_CB6_USKeyboard()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide
@@ -595,7 +591,7 @@ Redirects AltGr -> context menu`n
 Return
 }
 
-F_Checkbox7()
+F_CB7_RightClick()
 {
 	global 
 	Gui, Submit, NoHide 
@@ -630,7 +626,7 @@ Return
 #If MouseIsOver("ahk_class Shell_TrayWnd")
 #If
 
-F_Checkbox8()
+F_CB8_VolumeUpDown()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -640,14 +636,14 @@ F_Checkbox8()
 				Hotkey, If, MouseIsOver("ahk_class Shell_TrayWnd")
 				Hotkey, WheelUp, 	F_mywheelup, 			off
 				Hotkey, WheelDown, 	F_mywheeldown, 			off
-				IniWrite, No, VariousFunctions.ini, Menu memory, Volume Up & Down
+				IniWrite, NO, VariousFunctions.ini, Menu memory, Volume Up & Down
 				Hotkey, If
 		
 			Case 1:
 				Hotkey, If, MouseIsOver("ahk_class Shell_TrayWnd")
 				Hotkey, WheelUp, 	F_mywheelup, 			on 
 				Hotkey, WheelDown, 	F_mywheeldown, 			on 
-				IniWrite, Yes, VariousFunctions.ini, Menu memory, Volume Up & Down
+				IniWrite, YES, VariousFunctions.ini, Menu memory, Volume Up & Down
 				Hotkey, If
 		}
 }
@@ -680,7 +676,7 @@ Switches between windows by pressing {Left Windows} key and {Left Alt} key, then
 Return
 }
 
-F_Checkbox9()
+F_CB9_WindowSwitcher()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -724,7 +720,7 @@ It works everywhere exept Word, because in Word Application this function alread
 Return
 }
 
-F_Checkbox10()
+F_CB10_CAPSLOCK()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -760,7 +756,7 @@ It works everywhere exept Word, because in Word Application this function alread
 Return
 }
 
-F_Checkbox11()
+F_CB11_SHIFTF3()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -895,7 +891,7 @@ Switch windows in the system tray, by pressing {F13}.
 Return
 }
 
-F_Checkbox12()
+F_CB12_FootswitchF13()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -928,7 +924,7 @@ Immediately resets the hotstring recognizer, by pressing {F14}.
 Return
 }
 
-F_Checkbox13()
+F_CB13_FootswitchF14()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -964,7 +960,7 @@ Make a beep sound, by pressing {F15}.
 Return
 }
 
-F_Checkbox14()
+F_CB14_FootswitchF15()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -999,7 +995,7 @@ Translate from English to Polish, by selecting text and pressing {Win} + {Ctrl} 
 Return
 }
 
-F_Checkbox15()
+F_CB15_TranslateEN_PL()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1026,7 +1022,7 @@ Translate from Polish to English, by selecting text and pressing {Win} + t.
 Return
 }
 
-F_Checkbox16()
+F_CB16_TranslatePL_EN()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1205,7 +1201,7 @@ Suspend, by pressing {Ctrl} + {shift} + F1
 Return
 }
 
-F_Checkbox17()
+F_CB17_Suspend()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1213,11 +1209,11 @@ F_Checkbox17()
 		{
 			Case 0:
 			Hotkey, +^F1,  F_mysuspend1, off 
-			IniWrite, No, VariousFunctions.ini, Menu memory, Suspend
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Suspend
 		
 			Case 1:
 			Hotkey, +^F1, F_mysuspend1, on 
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Suspend
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Suspend
 		}
 }
 
@@ -1237,7 +1233,7 @@ Reboot by pressing a Multimedia key - {Ctrl}+{Volume Up} or {Ctrl} + {Shift} + {
 Return
 }
 
-F_Checkbox18()
+F_CB18_Reboot()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1271,7 +1267,7 @@ Shutdown system, by pressing a Multimedia key - {Ctrl}+{Volume Mute} or {Ctrl} +
 Return
 }
 
-F_Checkbox19()
+F_CB19_Shutdown()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1307,7 +1303,7 @@ Smooth toggle window tranparency, by moving mouse wheel and pressing {Ctrl}+{Shi
 Return
 }
 
-F_Checkbox20()
+F_CB20_TransparencyMouse()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1316,12 +1312,12 @@ F_Checkbox20()
 			Case 0:
 			Hotkey, ^+WheelDown, 	F_MouseTranspdown, 	off
 			Hotkey, ^+WheelUp, 		F_MouseTranspup, 	off
-			IniWrite, No, VariousFunctions.ini, Menu memory, Tranparency Mouse
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Tranparency Mouse
 		
 			Case 1:
 			Hotkey, ^+WheelDown,	 F_MouseTranspdown, 	on 
 			Hotkey, ^+WheelUp,		 F_MouseTranspup, 		on 
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Tranparency Mouse
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Tranparency Mouse
 		}
 }
 
@@ -1360,7 +1356,7 @@ Toggle window transparency by pressing {Ctr} + {Windows} + {F9} by half.
 Return
 }
 
-F_Checkbox21()
+F_CB21_TransparencyKeys()
 {
 	global		;assume-global mode of operation
 	Gui, Submit, NoHide 
@@ -1411,7 +1407,7 @@ Align your content with the left margin in Microsoft Word, by pressing {Ctrl} + 
 Return
 }
 
-F_Checkbox22()
+F_CB22_AlignLeft()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1419,12 +1415,12 @@ F_Checkbox22()
 		{
 			Case 0:
 			Hotkey, +^l, F_myalignleft, off 
-			IniWrite, No, VariousFunctions.ini, Menu memory, Align Left
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Align Left
 		
 			Case 1:
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotkey, +^l, F_myalignleft, on 
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Align Left
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Align Left
 		}
 }
 
@@ -1444,7 +1440,7 @@ Open and close the Apply Styles window in Microsoft Word, by pressing {Ctrl} + {
 Return
 }
 
-F_Checkbox23()
+F_CB23_ApplyStyles()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1492,20 +1488,20 @@ The function starts autosave of word documents, every 10 min, if the file size h
 Return
 }
 
-F_Checkbox24()
+F_CB24_Autosave()
 {
 	global
 	Gui, Submit, NoHide 
 	Switch Check24 ;0, 1, -1
 		{
 			Case 0:
-			IniWrite, No, VariousFunctions.ini, Menu memory, Autosave
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Autosave
 			AutosaveIni := 0
 			SetTimer, F_AutoSave, Off
 			TrayTip, %A_ScriptName%, Autozapis został wyłączony!, 5, 0x1
 
 			Case 1:
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Autosave
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Autosave
 			AutosaveIni := 1
 			SetTimer, F_AutoSave, % interval
 			TrayTip, %A_ScriptName%, Autozapis został włączony!, 5, 0x1
@@ -1576,7 +1572,7 @@ Delete whole text line in Microsoft Word, by pressing {Ctrl} + l.
 Return
 }
 
-F_Checkbox25()
+F_CB25_DeleteLine()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1584,12 +1580,12 @@ F_Checkbox25()
 		{
 			Case 0:
 			Hotkey, ^l, DeleteLineOfText, off 
-			IniWrite, No, VariousFunctions.ini, Menu memory, Delete Line 
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Delete Line 
 		
 			Case 1:
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotkey, ^l, DeleteLineOfText, on 
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Delete Line
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Delete Line
 		}
 }
 
@@ -1615,7 +1611,7 @@ Set "Ukryty ms" style of selected text in Microsoft Word, by pressing {Shift} + 
 Return
 }
 
-F_Checkbox26()
+F_CB26_Hide()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1675,7 +1671,7 @@ Enables and disables hidden text and non-printing characters in Microsoft Word, 
 Return
 }
 
-F_Checkbox27()
+F_CB27_Show()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1736,7 +1732,7 @@ Add hyperlink in selected text in Microsoft Word, by pressing {Ctrl} + k.
 Return
 }
 
-F_Checkbox28()
+F_CB28_HyperLink()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1772,7 +1768,7 @@ Open "Open" window and show the path of a document on the top bar of the documen
 Return
 }
 
-F_Checkbox29()
+F_CB29_OpenAndShowPath()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1782,13 +1778,13 @@ F_Checkbox29()
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotkey, ^o,  FullPath, off 
 			Hotkey, IfWinActive
-			IniWrite, No, VariousFunctions.ini, Menu memory, Open and Show Path
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Open and Show Path
 		
 			Case 1:
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotkey, ^o, FullPath, on 
 			Hotkey, IfWinActive
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Open and Show Path
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Open and Show Path
 		}
 }
 
@@ -1814,7 +1810,7 @@ Strike selected text through, by pressing {Ctrl} + {Shift} + x.
 Return
 }
 
-F_Checkbox30()
+F_CB30_StrikethroughText()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1863,7 +1859,7 @@ After typing "tabela" + tab, you receive | | | + {Enter}. You recive table in Mi
 Return
 }
 
-F_Checkbox31()
+F_CB31_Table()
 {
 	global
 	Gui, Submit, NoHide 
@@ -1873,13 +1869,13 @@ F_Checkbox31()
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotstring(":*:tabela`t", "| | |`n", "off")
 			Hotkey, IfWinActive 
-			IniWrite, No, VariousFunctions.ini, Menu memory, Table
+			IniWrite, NO, VariousFunctions.ini, Menu memory, Table
 		
 			Case 1:
 			Hotkey, IfWinActive, ahk_exe WINWORD.EXE
 			Hotstring(":*:tabela`t", "| | |", "on")
 			Hotkey, IfWinActive
-			IniWrite, Yes, VariousFunctions.ini, Menu memory, Table
+			IniWrite, YES, VariousFunctions.ini, Menu memory, Table
 		}
 }
 
@@ -1895,7 +1891,7 @@ Add Polish or English template in Microsoft Word, by pressing {Ctrl} + t.
 Return
 }
 
-F_Checkbox32()
+F_CB32_AddTemplate()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2148,7 +2144,7 @@ Switch off added template, by pressing {Ctrl} + {Shift} + t.
 Return
 }
 
-F_Checkbox33()
+F_CB33_TemplateOff()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2195,7 +2191,7 @@ Run the KeePass 2 application, by pressing {Shift} + {Ctrl} + k
 Return
 }
 
-F_Checkbox34()
+F_CB34_KeePass()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2227,7 +2223,7 @@ Run Microsoft Word application by pressing {Media_Next} → Multimedia keys
 Return
 }
 
-F_Checkbox35()
+F_CB35_MSWord()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2261,7 +2257,7 @@ Run Paint application by pressing {Media_Play_Pause} → Multimedia keys
 Return
 }
 
-F_Checkbox36()
+F_CB36_Paint()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2295,7 +2291,7 @@ Run Total Commander application by pressing - {Media_Prev} → Multimedia keys
 Return
 }
 
-F_Checkbox37()
+F_CB37_TotalCommander()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2324,12 +2320,12 @@ F_Button38()
 Gui, Submit, NoHide
 	Msgbox, 
 				(
-Run applications:`nSnippingTool.exe, by pressing {Volume down} key → Multimedia keys.`nzWindows Printscreen application, by pressing {PrintScreen} key.
+Run Printscreen application, by pressing {PrintScreen} key.
 				)
 Return
 }
 
-F_Checkbox38()
+F_CB38_PrintScreen()
 {
 	global
 	Gui, Submit, NoHide 
@@ -2356,45 +2352,58 @@ F_prtscn()
 F_IniRead()
 {
 	global	;assume-global mode of operation
+	Temp1 := ""
+	IniRead, ParenthesiIni, 		VariousFunctions.ini, 	Menu memory, 	Parenthesis, 			NO
+	IniRead, BrowserIni, 			VariousFunctions.ini, 	Menu memory, 	Browser, 				NO
+	IniRead, SetEnglishKeyboardIni, VariousFunctions.ini, 	Menu memory, 	Set English Keyboard, 	NO
+	IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, 	AltGr, 					NO
+	IniRead, WindowSwitcherIni, 	VariousFunctions.ini, 	Menu memory, 	Window Switcher, 		NO
+	IniRead, PrintScreenIni, 		VariousFunctions.ini, 	Menu memory, 	Print Screen, 			NO
+	IniRead, CapitalShiftIni, 		VariousFunctions.ini, 	Menu memory,	Capitalize Shift, 		NO
+	IniRead, CapitalCapslIni, 		VariousFunctions.ini, 	Menu memory,	Capitalize Capslock, 	NO
+	IniRead, MicrosoftWordIni, 		VariousFunctions.ini, 	Menu memory,	Microsoft `Word, 		NO
+	IniRead, TotalCommanderIni, 	VariousFunctions.ini, 	Menu memory,	Total Commander, 		NO
+	IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory,	Paint, 					NO
+	IniRead, RebootIni, 			VariousFunctions.ini, 	Menu memory,	Reboot, 				NO
+	IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory,	Shutdown, 				NO
+	IniRead, TranspIni, 			VariousFunctions.ini, 	Menu memory,	Transparency, 			NO
+	IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory,	F13, 					NO
+	IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory,	F14, 					NO
+	IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory,	F15, 					NO
+	IniRead, TopIni,				VariousFunctions.ini, 	Menu memory,	Always on top,			NO
+	IniRead, KeePassIni,			VariousFunctions.ini, 	Menu memory,	KeePass,				NO
+	IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory,	Hyperlink,				NO
+	IniRead, HideIni,				VariousFunctions.ini, 	Menu memory,	Hidetext,				NO
+	IniRead, ShowIni,				VariousFunctions.ini, 	Menu memory,	Showtext,				NO
+	IniRead, AddTemplateIni,		VariousFunctions.ini, 	Menu memory,	Add Template,			NO
+	IniRead, TemplateOffIni,		VariousFunctions.ini, 	Menu memory,	Template Off,			NO
+	IniRead, StrikethroIni, 		VariousFunctions.ini,   Menu memory,	Strikethrough Text,    	NO
+	IniRead, DeleteLineIni, 		VariousFunctions.ini,   Menu memory,	Delete Line,    		NO
+	IniRead, AlignLeftIni, 			VariousFunctions.ini,   Menu memory,	Align Left,    			NO
+	IniRead, ApplyStyleIni, 		VariousFunctions.ini,   Menu memory,	Apply Styles,    		NO
+	IniRead, OpenPathIni, 			VariousFunctions.ini,   Menu memory,	Open and Show Path,    	NO
+	IniRead, TableIni, 				VariousFunctions.ini,   Menu memory,	Table,    				NO
+	IniRead, SuspendIni,			VariousFunctions.ini,	Menu memory,	Suspend,				NO
+	IniRead, VolumeIni,				VariousFunctions.ini,	Menu memory,	Volume Up & Down,		NO
+	IniRead, BroWinSwiIni,			VariousFunctions.ini,	Menu memory,	Browser Win Switcher,	NO
+	IniRead, TranspMouIni, 			VariousFunctions.ini,	Menu memory,	Transparency Mouse,		NO
+	IniRead, AutosaveIni, 			VariousFunctions.ini,	Menu memory,	Autosave,				NO
+	IniRead, ENtoPLini, 			VariousFunctions.ini,	Menu memory,	ENtoPL,					NO
+	IniRead, PLtoENini, 			VariousFunctions.ini,	Menu memory,	PLtoEN,					NO
+	IniRead, AutomatePaintini, 		VariousFunctions.ini,	Menu memory,	AutomatePaint,			NO
 
-	IniRead, ParenthesiIni, 		VariousFunctions.ini, 	Menu memory, Parenthesis, 			NO
-	IniRead, BrowserIni, 			VariousFunctions.ini, 	Menu memory, Browser, 				NO
-	IniRead, SetEnglishKeyboardIni, VariousFunctions.ini, 	Menu memory, Set English Keyboard, 	NO
-	IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, AltGr, 				NO
-	IniRead, WindowSwitcherIni, 	VariousFunctions.ini, 	Menu memory, Window Switcher, 		NO
-	IniRead, PrintScreenIni, 		VariousFunctions.ini, 	Menu memory, Print Screen, 			NO
-	IniRead, CapitalShiftIni, 		VariousFunctions.ini, 	Menu memory, Capitalize Shift, 		NO
-	IniRead, CapitalCapslIni, 		VariousFunctions.ini, 	Menu memory, Capitalize Capslock, 	NO
-	IniRead, MicrosoftWordIni, 		VariousFunctions.ini, 	Menu memory, Microsoft `Word, 		NO
-	IniRead, TotalCommanderIni, 	VariousFunctions.ini, 	Menu memory, Total Commander, 		NO
-	IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory, Paint, 				NO
-	IniRead, RebootIni, 			VariousFunctions.ini, 	Menu memory, Reboot, 				NO
-	IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory, Shutdown, 				NO
-	IniRead, TranspIni, 			VariousFunctions.ini, 	Menu memory, Transparency, 			NO
-	IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory, F13, 					NO
-	IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory, F14, 					NO
-	IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory, F15, 					NO
-	IniRead, TopIni,				VariousFunctions.ini, 	Menu memory, Always on top,			NO
-	IniRead, KeePassIni,			VariousFunctions.ini, 	Menu memory, KeePass,				NO
-	IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory, Hyperlink,				NO
-	IniRead, HideIni,				VariousFunctions.ini, 	Menu memory, Hidetext,				NO
-	IniRead, ShowIni,				VariousFunctions.ini, 	Menu memory, Showtext,				NO
-	IniRead, AddTemplateIni,		VariousFunctions.ini, 	Menu memory, Add Template,			NO
-	IniRead, TemplateOffIni,		VariousFunctions.ini, 	Menu memory, Template Off,			NO
-	IniRead, StrikethroIni, 		VariousFunctions.ini,   Menu memory, Strikethrough Text,    NO
-	IniRead, DeleteLineIni, 		VariousFunctions.ini,   Menu memory, Delete Line,    		NO
-	IniRead, AlignLeftIni, 			VariousFunctions.ini,   Menu memory, Align Left,    		NO
-	IniRead, ApplyStyleIni, 		VariousFunctions.ini,   Menu memory, Apply Styles,    		NO
-	IniRead, OpenPathIni, 			VariousFunctions.ini,   Menu memory, Open and Show Path,    NO
-	IniRead, TableIni, 				VariousFunctions.ini,   Menu memory, Table,    				NO
-	IniRead, SuspendIni,			VariousFunctions.ini,	Menu memory, Suspend,				NO
-	IniRead, VolumeIni,				VariousFunctions.ini,	Menu memory, Volume Up & Down,		NO
-	IniRead, BroWinSwiIni,			VariousFunctions.ini,	Menu memory, Browser Win Switcher,	NO
-	IniRead, TranspMouIni, 			VariousFunctions.ini,	Menu memory, Transparency Mouse,	NO
-	IniRead, AutosaveIni, 			VariousFunctions.ini,	Menu memory, Autosave,				NO
-	IniRead, ENtoPLini, 			VariousFunctions.ini,	Menu memory, ENtoPL,				NO
-	IniRead, PLtoENini, 			VariousFunctions.ini,	Menu memory, PLtoEN,				NO
-	IniRead, AutomatePaintini, 		VariousFunctions.ini,	Menu memory, AutomatePaint,			NO
+	;[OpenTabs]
+	IniRead, URL1  ,				VariousFunctions.ini,	OpenTabs,		Tab1,					Unknown link
+	IniRead, URL2  ,				VariousFunctions.ini,	OpenTabs,		Tab2,					Unknown link
+	IniRead, URL3  ,				VariousFunctions.ini,	OpenTabs,		Tab3,					Unknown link
+	IniRead, URL4  ,				VariousFunctions.ini,	OpenTabs,		Tab4,					Unknown link
+	IniRead, URL5  ,				VariousFunctions.ini,	OpenTabs,		Tab5,					Unknown link
+	IniRead, URL6  ,				VariousFunctions.ini,	OpenTabs,		Tab6,					Unknown link
+	IniRead, URL7  ,				VariousFunctions.ini,	OpenTabs,		Tab7,					Unknown link
+	IniRead, URL8  ,				VariousFunctions.ini,	OpenTabs,		Tab8,					Unknown link
+	IniRead, URL9  ,				VariousFunctions.ini,	OpenTabs,		Tab9,					Unknown link
+	IniRead, URL10 ,				VariousFunctions.ini,	OpenTabs,		Tab10,					Unknown link
+	Temp1 := URL1 . A_space . URL2 . A_space . URL3 . A_space . URL4 . A_space . URL5 . A_space . URL6 . A_space . URL7 . A_space . URL8 . A_space . URL9 . A_space . URL10
 }
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2410,7 +2419,7 @@ F_PrepareGuiElements()
 	Gui Add, Button, 	x8 y64 w220 h41 ClassButton gF_About1 , About
 
 	Gui Add, GroupBox, 	x8 y104 w220 h303
-	Gui Add, CheckBox, 	x24 y120 w170 h23 vCheck1 gF_Checkbox1, Always on top
+	Gui Add, CheckBox, 	x24 y120 w170 h23 vCheck1 gF_CB1_AlwaysOnTop, Always on top
 	Switch TopIni
 	{
 		Case "YES": GuiControl, , Check1, 1
@@ -2419,7 +2428,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, 	x200 y120 w22 h24 gF_Button1,	?
 
-	Gui Add, CheckBox, x24 y152 w170 h23 vCheck2 gF_Checkbox2, Automate Paint
+	Gui Add, CheckBox, x24 y152 w170 h23 vCheck2 gF_CB2_AutomatePaint, Automate Paint
 	Switch AutomatePaintIni
 	{
 		Case "YES": GuiControl, , Check2, 1
@@ -2428,7 +2437,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y152 w22 h24 gF_Button2, ?
 
-	Gui Add, CheckBox, x24 y184 w170 h23 vCheck3 gF_Checkbox3, Chrome tab switcher
+	Gui Add, CheckBox, x24 y184 w170 h23 vCheck3 gF_CB3_ChromeTabSwitcher, Chrome tab switcher
 	Switch BroWinSwiIni
 	{
 		Case "YES": GuiControl, , Check3, 1
@@ -2437,7 +2446,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y184 w22 h24 gF_Button3, ?
 
-	Gui Add, CheckBox, x24 y216 w170 h23 vCheck4 gF_Checkbox4, Open tabs in Chrome
+	Gui Add, CheckBox, x24 y216 w170 h23 vCheck4 gF_CB4_OpenTabs, Open tabs in Chrome
 	Switch BrowserIni
 	{
 		Case "YES": GuiControl, , Check4, 1
@@ -2446,7 +2455,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y216 w22 h24 gF_Button4, ?
 
-	Gui Add, CheckBox, x24 y248 w170 h23 vCheck5 gF_Checkbox5, Parenthesis watcher
+	Gui Add, CheckBox, x24 y248 w170 h23 vCheck5 gF_CB5_ParenthesisWatcher, Parenthesis watcher
 	Switch ParenthesisIni
 	{
 		Case "YES": GuiControl, , Check5, 1
@@ -2455,7 +2464,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y248 w22 h24 gF_Button5, ?
 
-	Gui Add, CheckBox, x24 y280 w170 h23 vCheck6 gF_Checkbox6, US keybord
+	Gui Add, CheckBox, x24 y280 w170 h23 vCheck6 gF_CB6_USKeyboard, US keybord
 	Switch SetEnglishKeyboardIni
 	{
 		Case "YES": GuiControl, , Check6, 1
@@ -2464,7 +2473,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y280 w22 h24 gF_Button6, ?
 
-	Gui Add, CheckBox, x24 y312 w170 h23 vCheck7 gF_Checkbox7, Right-click context menu
+	Gui Add, CheckBox, x24 y312 w170 h23 vCheck7 gF_CB7_RightClick, Right-click context menu
 	Switch AltGrIni
 	{
 		Case "YES": GuiControl, , Check7, 1
@@ -2473,7 +2482,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y312 w22 h24 gF_Button7, ?
 
-	Gui Add, CheckBox, x24 y344 w170 h23 vCheck8 gF_Checkbox8, Volume Up and Down
+	Gui Add, CheckBox, x24 y344 w170 h23 vCheck8 gF_CB8_VolumeUpDown, Volume Up and Down
 	Switch VolumeIni
 	{
 		Case "YES": GuiControl, , Check8, 1
@@ -2482,7 +2491,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y344 w22 h24 gF_Button8, ?
 
-	Gui Add, CheckBox, x24 y376 w170 h23 vCheck9 gF_Checkbox9, Window switcher
+	Gui Add, CheckBox, x24 y376 w170 h23 vCheck9 gF_CB9_WindowSwitcher, Window switcher
 	Switch WindowSwitcherIni
 	{
 		Case "YES": GuiControl, , Check9, 1
@@ -2493,7 +2502,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x8 y416 w219 h89, Capitalization switcher
 
-	Gui Add, CheckBox, x24 y440 w169 h23 vCheck10 gF_Checkbox10, Capslock
+	Gui Add, CheckBox, x24 y440 w169 h23 vCheck10 gF_CB10_CAPSLOCK, Capslock
 	Switch CapitalCapsIni
 	{
 		Case "YES": GuiControl, , Check10, 1
@@ -2502,7 +2511,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x200 y440 w22 h24 gF_Button10, ?
 
-	Gui Add, CheckBox, x24 y472 w169 h23 vCheck11 gF_Checkbox11, Shift + F3
+	Gui Add, CheckBox, x24 y472 w169 h23 vCheck11 gF_CB11_SHIFTF3, Shift + F3
 	Switch CapitalShiftIni
 	{
 		Case "YES": GuiControl, , Check11, 1
@@ -2513,7 +2522,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x240 y32 w177 h128, Foot switch
 
-	Gui Add, CheckBox, x256 y56 w129 h23 vCheck12 gF_Checkbox12, F13
+	Gui Add, CheckBox, x256 y56 w129 h23 vCheck12 gF_CB12_FootswitchF13, F13
 	Switch F13Ini
 	{
 		Case "YES": GuiControl, , Check12, 1
@@ -2522,7 +2531,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y56 w22 h24 gF_Button12, ?
 
-	Gui Add, CheckBox, x256 y88 w129 h23 vCheck13 gF_Checkbox13, F14
+	Gui Add, CheckBox, x256 y88 w129 h23 vCheck13 gF_CB13_FootswitchF14, F14
 	Switch F14Ini
 	{
 		Case "YES": GuiControl, , Check13, 1
@@ -2531,7 +2540,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y88 w22 h24 gF_Button13, ?
 
-	Gui Add, CheckBox, x256 y120 w129 h23 vCheck14 gF_Checkbox14, F15
+	Gui Add, CheckBox, x256 y120 w129 h23 vCheck14 gF_CB14_FootswitchF15, F15
 	Switch F15Ini
 	{
 		Case "YES": GuiControl, , Check14, 1
@@ -2542,7 +2551,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x240 y168 w178 h100, Google translate
 
-	Gui Add, CheckBox, x256 y192 w129 h23 vCheck15 gF_Checkbox15, English → Polish
+	Gui Add, CheckBox, x256 y192 w129 h23 vCheck15 gF_CB15_TranslateEN_PL, English → Polish
 	Switch ENtoPLIni
 	{
 		Case "YES": GuiControl, , Check15, 1
@@ -2551,7 +2560,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y192 w22 h24 gF_Button15, ?
 
-	Gui Add, CheckBox, x256 y224 w129 h23 vCheck16 gF_Checkbox16, Polish → English
+	Gui Add, CheckBox, x256 y224 w129 h23 vCheck16 gF_CB16_TranslatePL_EN, Polish → English
 	Switch PLtoENIni
 	{
 		Case "YES": GuiControl, , Check16, 1
@@ -2562,7 +2571,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x240 y280 w177 h127, Power PC
 
-	Gui Add, CheckBox, x256 y312 w129 h23 vCheck17 gF_Checkbox17, Suspend
+	Gui Add, CheckBox, x256 y312 w129 h23 vCheck17 gF_CB17_Suspend, Suspend
 	Switch SuspendIni
 	{
 		Case "YES": GuiControl, , Check17, 1
@@ -2571,7 +2580,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y312 w22 h24 gF_Button17, ?
 
-	Gui Add, CheckBox, x256 y344 w129 h23 vCheck18 gF_Checkbox18, Reboot
+	Gui Add, CheckBox, x256 y344 w129 h23 vCheck18 gF_CB18_Reboot, Reboot
 	Switch RebootIni
 	{
 		Case "YES": GuiControl, , Check18, 1
@@ -2580,7 +2589,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y344 w22 h24 gF_Button18, ?
 
-	Gui Add, CheckBox, x256 y376 w129 h23 vCheck19 gF_Checkbox19, Shutdown
+	Gui Add, CheckBox, x256 y376 w129 h23 vCheck19 gF_CB19_Shutdown, Shutdown
 	Switch ShutdownIni
 	{
 		Case "YES": GuiControl, , Check19, 1
@@ -2591,7 +2600,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x240 y416 w178 h90, Transparency switcher
 
-	Gui Add, CheckBox, x256 y440 w131 h23 vCheck20 gF_Checkbox20, Mouse
+	Gui Add, CheckBox, x256 y440 w131 h23 vCheck20 gF_CB20_TransparencyMouse, Mouse
 	Switch TransparencyMouIni
 	{
 		Case "YES": GuiControl, , Check20, 1
@@ -2600,7 +2609,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x392 y440 w22 h24 gF_Button20, ?
 
-	Gui Add, CheckBox, x256 y472 w130 h23 vCheck21 gF_Checkbox21, Keys
+	Gui Add, CheckBox, x256 y472 w130 h23 vCheck21 gF_CB21_TransparencyKeys, Keys
 	Switch TransparencyIni
 	{
 		Case "YES": GuiControl, , Check21, 1
@@ -2611,7 +2620,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x432 y32 w188 h474, Functions in MS WORD
 
-	Gui Add, CheckBox, x440 y56 w138 h23 vCheck22 gF_Checkbox22, Align Left
+	Gui Add, CheckBox, x440 y56 w138 h23 vCheck22 gF_CB22_AlignLeft, Align Left
 	Switch AlignLeftIni
 	{
 		Case "YES": GuiControl, , Check22, 1
@@ -2620,7 +2629,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y56 w22 h24 gF_Button22, ?  
 
-	Gui Add, CheckBox, x440 y88 w138 h23 vCheck23 gF_Checkbox23, Apply styles
+	Gui Add, CheckBox, x440 y88 w138 h23 vCheck23 gF_CB23_ApplyStyles, Apply styles
 	Switch ApplyStyleIni
 	{
 		Case "YES": GuiControl, , Check23, 1
@@ -2629,7 +2638,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y88 w22 h24 gF_Button23, ?
 
-	Gui Add, CheckBox, x440 y120 w138 h23 vCheck24 gF_Checkbox24, Autosave
+	Gui Add, CheckBox, x440 y120 w138 h23 vCheck24 gF_CB24_Autosave, Autosave
 	Switch AutosaveIni
 	{
 		Case "YES": GuiControl, , Check24, 1
@@ -2638,7 +2647,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y120 w22 h24 gF_Button24, ?
 
-	Gui Add, CheckBox, x440 y152 w138 h23 vCheck25 gF_Checkbox25, Delete Line
+	Gui Add, CheckBox, x440 y152 w138 h23 vCheck25 gF_CB25_DeleteLine, Delete Line
 	Switch DeleteLineIni
 	{
 		Case "YES": GuiControl, , Check25, 1
@@ -2649,7 +2658,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Text, x440 y184 w138 h23 +0x200  , Hidden text
 
-	Gui Add, CheckBox, x480 y216 w99 h22 vCheck26 gF_Checkbox26, Hide
+	Gui Add, CheckBox, x480 y216 w99 h22 vCheck26 gF_CB26_Hide, Hide
 	Switch HideIni
 	{
 		Case "YES": GuiControl, , Check26, 1
@@ -2658,7 +2667,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y216 w22 h24 gF_Button26, ?
 
-	Gui Add, CheckBox, x480 y248 w98 h22 vCheck27 gF_Checkbox27, Show
+	Gui Add, CheckBox, x480 y248 w98 h22 vCheck27 gF_CB27_Show, Show
 	Switch ShowIni
 	{
 		Case "YES": GuiControl, , Check27, 1
@@ -2667,7 +2676,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y248 w22 h24 gF_Button27, ?
 
-	Gui Add, CheckBox, x440 y280 w138 h23 vCheck28 gF_Checkbox28, Hyperlink
+	Gui Add, CheckBox, x440 y280 w138 h23 vCheck28 gF_CB28_Hyperlink, Hyperlink
 	Switch HyperIni
 	{
 		Case "YES": GuiControl, , Check28, 1
@@ -2676,7 +2685,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y280 w22 h24 gF_Button28, ?
 
-	Gui Add, CheckBox, x440 y312 w138 h23 vCheck29 gF_Checkbox29, Open and show path
+	Gui Add, CheckBox, x440 y312 w138 h23 vCheck29 gF_CB29_OpenAndShowPath, Open and show path
 	Switch OpenPathIni
 	{
 		Case "YES": GuiControl, , Check29, 1
@@ -2685,7 +2694,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y312 w22 h24 gF_Button29, ?
 
-	Gui Add, CheckBox, x440 y344 w138 h23 vCheck30 gF_Checkbox30, Strikethrough text
+	Gui Add, CheckBox, x440 y344 w138 h23 vCheck30 gF_CB30_StrikethroughText, Strikethrough text
 	Switch OpenPathIni
 	{
 		Case "YES": GuiControl, , Check30, 1
@@ -2694,7 +2703,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y344 w22 h24 gF_Button30, ?
 
-	Gui Add, CheckBox, x440 y376 w138 h23 vCheck31 gF_Checkbox31, Table
+	Gui Add, CheckBox, x440 y376 w138 h23 vCheck31 gF_CB31_Table, Table
 	Switch TableIni
 	{
 		Case "YES": GuiControl, , Check31, 1
@@ -2705,7 +2714,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Text, x440 y408 w138 h23 +0x200  , Template
 
-	Gui Add, CheckBox, x480 y440 w100 h24 vCheck32 gF_Checkbox32, Add template
+	Gui Add, CheckBox, x480 y440 w100 h24 vCheck32 gF_CB32_AddTemplate, Add template
 	Switch AddTemplateIni
 	{
 		Case "YES": GuiControl, , Check32, 1
@@ -2714,7 +2723,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x584 y440 w22 h24 gF_Button32, ?
 
-	Gui Add, CheckBox, x480 y472 w102 h24 vCheck33 gF_Checkbox33, Template Off
+	Gui Add, CheckBox, x480 y472 w102 h24 vCheck33 gF_CB33_TemplateOff, Template Off
 	Switch TemplateOffIni
 	{
 		Case "YES": GuiControl, , Check33, 1
@@ -2725,7 +2734,7 @@ F_PrepareGuiElements()
 
 	Gui Add, GroupBox, x632 y32 w188 h183, Run . . .
 
-	Gui Add, CheckBox, x648 y56 w138 h23 vCheck34 gF_Checkbox34, KeePass
+	Gui Add, CheckBox, x648 y56 w138 h23 vCheck34 gF_CB34_KeePass, KeePass
 	Switch KeePassIni
 	{
 		Case "YES": GuiControl, , Check34, 1
@@ -2734,7 +2743,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x792 y56 w22 h24 gF_Button34, ?
 
-	Gui Add, CheckBox, x648 y88 w138 h23 vCheck35 gF_Checkbox35, MS Word
+	Gui Add, CheckBox, x648 y88 w138 h23 vCheck35 gF_CB35_MSWord, MS Word
 	Switch MicrosoftWordIni
 	{
 		Case "YES": GuiControl, , Check35, 1
@@ -2743,7 +2752,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x792 y88 w22 h24 gF_Button35, ?
 
-	Gui Add, CheckBox, x648 y120 w138 h24 vCheck36 gF_Checkbox36, Paint
+	Gui Add, CheckBox, x648 y120 w138 h24 vCheck36 gF_CB36_Paint, Paint
 	Switch PaintIni
 	{
 		Case "YES": GuiControl, , Check36, 1
@@ -2752,7 +2761,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x792 y120 w22 h24 gF_Button36, ?
 
-	Gui Add, CheckBox, x648 y152 w138 h24 vCheck37 gF_Checkbox37, Total Commander
+	Gui Add, CheckBox, x648 y152 w138 h24 vCheck37 gF_CB37_TotalCommander, Total Commander
 	Switch TotalCommanderIni
 	{
 		Case "YES": GuiControl, , Check37, 1
@@ -2761,7 +2770,7 @@ F_PrepareGuiElements()
 
 	Gui Add, Button, x792 y152 w22 h24 gF_Button37, ?
 
-	Gui Add, CheckBox, x648 y184 w138 h23 vCheck38 gF_Checkbox38, Print Screen
+	Gui Add, CheckBox, x648 y184 w138 h23 vCheck38 gF_CB38_PrintScreen, Print Screen
 	Switch PrintScreenIni
 	{
 		Case "YES": GuiControl, , Check38, 1
@@ -2773,6 +2782,35 @@ F_PrepareGuiElements()
 }
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+F_PrepareOpenTabsGui()
+{
+	global	;assume-global mode of operation
+	Gui Font, s9, Segoe UI
+	Gui OpenTabs: Add, Text, x16 y8 w287 h27 +0x200, Type up to 10 links to open in Chrome and click "Save".
+			Gui OpenTabs: Add, Edit, x8 y48 w302 h21 vTab1
+				GuiControl, OpenTabs:, Tab1, % URL1
+			Gui OpenTabs: Add, Edit, x8 y80	 w302 h21 vTab2
+				GuiControl, OpenTabs:, Tab2, % URL2
+			Gui OpenTabs: Add, Edit, x8 y112 w302 h21 vTab3
+				GuiControl, OpenTabs:, Tab3, % URL3
+			Gui OpenTabs: Add, Edit, x8 y144 w302 h21 vTab4
+				GuiControl, OpenTabs:, Tab4, % URL4
+			Gui OpenTabs: Add, Edit, x8 y176 w302 h21 vTab5
+				GuiControl, OpenTabs:, Tab5, % URL5
+			Gui OpenTabs: Add, Edit, x8 y208 w302 h21 vTab6
+				GuiControl, OpenTabs:, Tab6, % URL6
+			Gui OpenTabs: Add, Edit, x8 y240 w302 h21 vTab7
+				GuiControl, OpenTabs:, Tab7, % URL7
+			Gui OpenTabs: Add, Edit, x8 y272 w302 h21 vTab8
+				GuiControl, OpenTabs:, Tab8, % URL8
+			Gui OpenTabs: Add, Edit, x8 y304 w302 h21 vTab9
+				GuiControl, OpenTabs:, Tab9, % URL9
+			Gui OpenTabs: Add, Edit, x8 y336 w302 h21 vTab10
+				GuiControl, OpenTabs:, Tab10, % URL10
+			Gui OpenTabs: Add, Button, x232 y368 w80 h23 gF_SAVE, &SAVE	
+}
+
 
 TurnOffTooltip()
 {
