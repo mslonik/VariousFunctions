@@ -1,9 +1,10 @@
 # **VariousFunctions**
 Collection of small AutoHotkey functions. Configurable on/off.
 
-> :bulb: **Tip:** Open GUI window by pressing *{Ctrl}+{Shift}+v* and close it by *{Esc}.*
 
 ![GUI_variousfunctions](https://user-images.githubusercontent.com/109993935/191761960-4b8600cc-db34-4116-b645-33a3f20ec3a4.png)
+> :bulb: **Tip:** Open GUI window by pressing *{Ctrl}+{Win}+v* and close it by *{Esc}.*
+
 ___
 
 ## Short descriptions for each functions:
