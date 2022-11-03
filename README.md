@@ -1,9 +1,10 @@
 # **VariousFunctions**
 Collection of small AutoHotkey functions. Configurable on/off.
 
-
-![GUI_variousfunctions](https://user-images.githubusercontent.com/109993935/191761960-4b8600cc-db34-4116-b645-33a3f20ec3a4.png)
 > :bulb: **Tip:** Open GUI window by pressing *{Ctrl}+{Win}+v* and close it by *{Esc}.*
+
+
+![](/GUI_variousfunctions.png)
 
 ___
 
@@ -28,8 +29,7 @@ ___
 ### Parenthesis watcher
 	After pressing keys like: {  [  (  `" , the closing symbols }  ]  ) `" will also appear. 
 	Aditionally a caret will jump between the parenthesis/quotation marks. 
-	It works also, when you have already written a text and want to put it between 
-	parenthesis/quotation marks. 
+	It works also, when you have already written a text and want to put it between parenthesis/quotation marks. 
 	You have to select words and press parenthesis/quotation marks.
 
 ### US Keyboard Switcher
