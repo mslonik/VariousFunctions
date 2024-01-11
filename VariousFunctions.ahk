@@ -4,8 +4,27 @@
 #Persistent
 SendMode Input  				; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%		; Ensures a consistent starting directory.
+#KeyHistory, 500				; Long key history on purpose, for debugging other scripts.
 
-Menu, Tray,Icon, % A_SCriptDir . "\vh.ico"  
+; - - - - - - - - - - - - - - CONVERSION TO EXE: BEGINNING- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+global AppVersion			:= "1.2.0" ;wersja głowna.uzupełnienie o funkcje.łatanie bagów
+global AppIcon				:= "vh.ico" ; Imagemagick: convert hotstrings.svg -alpha off -resize 96x96 -define icon:auto-resize="96,64,48,32,16" hotstrings.ico
+;@Ahk2Exe-Let vAppIcon=%A_PriorLine~U)^(.+"){1}(.+)".*$~$2% ; Keep these lines together
+;@Ahk2Exe-Let vAppVersion=%A_PriorLine~U)^(.+"){1}(.+)".*$~$2% ; Keep these lines together
+;Overrides the custom EXE icon used for compilation
+;@Ahk2Exe-SetMainIcon  %U_vAppIcon%
+;@Ahk2Exe-SetCopyright GNU GPL 3.x
+;@Ahk2Exe-SetDescription Advanced tool for various functions management.
+;@Ahk2Exe-SetProductName Original script name: %A_ScriptName%
+;@Ahk2Exe-Set OriginalScriptlocation, https://github.com/mslonik/VariousFunctions
+;@Ahk2Exe-SetCompanyName  http://mslonik.pl
+;@Ahk2Exe-SetFileVersion %U_vAppVersion%
+FileInstall, vh.ico, %A_SCriptDir%\%AppIcon%, 0
+FileInstall, Lib\UIA_Interface.ahk, %A_ScriptDir%\Lib\UIA_Interface.ahk, 0	; From unknown reason it works without Lib folder.
+FileInstall, LICENSE, LICENSE, 0
+; - - - - - - - - - - - - - - CONVERSION TO EXE: END- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Menu, Tray,Icon, %A_SCriptDir%\%AppIcon%
 
 #include %A_ScriptDir%\Lib\UIA_Interface.ahk
 
@@ -27,8 +46,6 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 , AutosaveFilePath		:= "C:\temp1\KopiaZapasowaPlikowWord\"
 , interval 			:= 10*60*1000	;10 min.
 ;--------------- Variables to switch windows ---------------
-, cntWnd 				:= 0
-, cntWnd2 			:= 0
 , id					:= []
 , order 				:= []
 ;---------------------------------------------------------------
@@ -40,6 +57,7 @@ global English_USA 		:= 0x0409   ; see AutoHotkey help: Language Codes https://w
 Hotkey, +#v, ChooseFunctions ;Hotkey to open a various functions gui
 
 ;//////////////////////////////////////////////////////////////// - PREPARATION OF GUI ELEMENTS AN INI - //////////////////////////////////////////////////////////////////////////////////////////////////////////
+F_PrepareChooseBrowserGui()
 F_PrepareOpenTabsGui()
 F_IniRead()
 F_PrepareGuiElements()
@@ -47,7 +65,7 @@ F_PrepareGuiElements()
 ;//////////////////////////////////////////////////////////////// - ACTIVATION OF SELECTED FUNCTIONS - //////////////////////////////////////////////////////////////////////////////////////////////////////////
 F_CB1_AlwaysOnTop() ;Always on top
 F_CB2_AutomatePaint() ;Automate Paint
-F_CB3_ChromeTabSwitcher() ;Chrome tab switcher
+F_CB3_ChromeTabSwitcher() ;Browser tab switcher
 F_CB4_OpenTabs() ;Open tabs in Chrome
 F_CB5_ParenthesisWatcher() ;Parenthesis watcher
 F_CB6_USKeyboard() ;US Keyboard
@@ -115,8 +133,8 @@ F_About1()
 	Gui, submit, NoHide
 	MsgBox,
 		(
-Authors:`nMaciej Słojewski, Hanna Ziętak, Jakub Masiak, Kasandra Krajewska`n`nInterface Author:`nKasandra Krajewska`n`nVersion: 1.1.2
-		)
+Authors:`nMaciej Słojewski, Hanna Ziętak, Jakub Masiak, Kasandra Krajewska`n`nInterface Author:`nKasandra Krajewska`n`nVersion: 
+		) %AppVersion%
 Return
 }
 
@@ -295,7 +313,7 @@ F_Button3_ChromeTabSwitcher()
 	Gui, Submit, NoHide
 	Msgbox, 
 				(
-ReturnSwitch tabs in Google Chrome Browser, by pressing {Xbutton1} and {Xbutton2}.
+ReturnSwitch tabs in Browser, by pressing {Xbutton1} and {Xbutton2}.
 				)
 Return
 }
@@ -353,12 +371,24 @@ F_mybutton2()
 return
 }
 
-;/////////////////////////////////////////////////////////////////// - OPEN TABS IN CHROME (4) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+;/////////////////////////////////////////////////////////////////// - OPEN TABS IN BROWSER (4) - //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 F_Button4_OpenTabs()
 {
 	global 
-	Gui, OpenTabs: Submit, Hide
-	Gui, OpenTabs: Show, w318 h395, Open tabs in Chrome
+	Gui, ChooseBrowser: Submit, Hide
+	Gui, ChooseBrowser: Show,, Choose Browser
+}
+
+F_SaveBrowser()
+{
+	global
+	Gui, ChooseBrowser: submit, Hide
+	IniWrite, %F_Chrome%, VariousFunctions.ini, ChooseBrowser, Chrome
+	IniWrite, %F_Edge%, VariousFunctions.ini, ChooseBrowser, Edge
+	Browser1 := F_Chrome
+	Browser2 := F_Edge
+	; IniWrite, %F_Firefox%, VariousFunctions.ini, ChooseBrowser, Firefox
+	Gui, OpenTabs: Show, w318 h395, Open tabs in Browser
 }
 
 F_SAVE()
@@ -389,10 +419,37 @@ F_CB4_OpenTabs()
 			IniWrite, NO, VariousFunctions.ini, Menu memory, Browser
 		
 			Case 1:
-			Run, % "chrome.exe" . A_space . Temp1
-			WinWait, ahk_class Chrome_WidgetWin_1 ahk_exe chrome.exe
-			WinMaximize, 
 			IniWrite, YES, VariousFunctions.ini, Menu memory, Browser
+				if (Browser1 == 1)
+				{
+					Try
+					{
+						Run, % "chrome.exe" . A_space . Temp1
+					}
+					Catch
+					{
+						MsgBox, 16, % A_ScriptName, Chrome.exe wasn't found., 5
+						return
+					}	
+
+					WinWait, ahk_class Chrome_WidgetWin_1 ahk_exe chrome.exe
+					WinMaximize, 
+				}
+				else if (Browser2 == 1)
+				{
+					Try
+					{
+						Run, % "msedge.exe" . A_space . Temp1
+					}
+					Catch 
+					{
+						MsgBox, 16, % A_ScriptName, msedge.exe wasn't found., 5
+						return
+					}	
+					WinWait, ahk_class Chrome_WidgetWin_1 ahk_exe msedge.exe
+					WinMaximize, 
+					; IniWrite, YES, VariousFunctions.ini, Menu memory, Browser
+				}
 		}
 }
 
@@ -419,10 +476,10 @@ F_CB5_ParenthesisWatcher()
 			Hotkey, 	~" , 			F_Parenthesis, Off
 			Hotkey, 	~( , 			F_Parenthesis, Off
 			Hotkey, 	~[ , 			F_Parenthesis, Off
-			Hotkey,      ~+Right Up,    F_Parenthesis, Off	;events related to keyboard; order matters!
-			Hotkey,      ~+Left Up,     F_Parenthesis, Off
-			Hotkey,      ~^+Left Up,    F_Parenthesis, Off
-			Hotkey,      ~^+Right Up,   F_Parenthesis, Off 
+			Hotkey,   ~+Right Up,    	F_Parenthesis, Off	;events related to keyboard; order matters!
+			Hotkey,   ~+Left Up,     	F_Parenthesis, Off
+			Hotkey,   ~^+Left Up,    	F_Parenthesis, Off
+			Hotkey,   ~^+Right Up,   	F_Parenthesis, Off 
 			IniWrite, NO, VariousFunctions.ini, Menu memory, Parenthesis
 
 			Case 1:
@@ -430,10 +487,10 @@ F_CB5_ParenthesisWatcher()
 			Hotkey, 	~" ,			F_Parenthesis, On
 			Hotkey, 	~( , 			F_Parenthesis, On
 			Hotkey, 	~[ , 			F_Parenthesis, On		
-			Hotkey,     ~+Right Up,     F_Parenthesis, On	;events related to keyboard; order matters!
-			Hotkey,     ~+Left Up,      F_Parenthesis, On
-			Hotkey,     ~^+Left Up,     F_Parenthesis, On
-			Hotkey,     ~^+Right Up,    F_Parenthesis, On
+			Hotkey,   ~+Right Up,     	F_Parenthesis, On	;events related to keyboard; order matters!
+			Hotkey,   ~+Left Up,      	F_Parenthesis, On
+			Hotkey,   ~^+Left Up,     	F_Parenthesis, On
+			Hotkey,   ~^+Right Up,    	F_Parenthesis, On
 			IniWrite,   YES, VariousFunctions.ini, Menu memory, Parenthesis
 		}
 }
@@ -709,14 +766,15 @@ F_CB9_WindowSwitcher()
 		
 			Case 1:
 			Hotkey,	LWin & LAlt, 	F_windowswitch, 	On 
-			Hotkey,	LAlt & LWin, 	F_windowswitch,		On 
+			Hotkey,	LAlt & LWin, 	F_windowswitch,	On 
 			IniWrite, YES, VariousFunctions.ini, Menu memory, Window Switcher
 		}
 }
 
 F_windowswitch()
 {
-		Send, {Ctrl Down}{LAlt Down}{Tab}{LAlt Up}{Ctrl Up}
+		Send, {Ctrl Down}{LAlt Down}{Tab}
+		Send, {Blind}{LAlt Up}{Ctrl Up}
 	return
 }
 ;/////////////////////////////////////////////////////////////////// - CAPITALIZATION SWITCHER (10) (11)- //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1496,8 +1554,8 @@ ToggleApplyStylesPane()
 	oWord := ""
 }
 
-
 ;AUTOSAVE (24)
+
 F_Button24_Autosave()
 {
 Gui, Submit, NoHide
@@ -2430,57 +2488,57 @@ F_IniRead()
 	global	;assume-global mode of operation
 	local URL1 := "" , URL2 := "" , URL3 := "" , URL4 := "" , URL5 := "" , URL6 := "" , URL7 := "" , URL8 := "" , URL9 := "" , URL10 := ""
 	Temp1 := ""
-	IniRead, ParenthesiIni, 		VariousFunctions.ini, 	Menu memory, 	Parenthesis, 			NO
+	IniRead, ParenthesiIni,			VariousFunctions.ini, 	Menu memory, 	Parenthesis, 			NO
 	IniRead, BrowserIni, 			VariousFunctions.ini, 	Menu memory, 	Browser, 				NO
-	IniRead, SetEnglishKeyboardIni, VariousFunctions.ini, 	Menu memory, 	Set English Keyboard, 	NO
-	IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, 	AltGr, 					NO
-	IniRead, WindowSwitcherIni, 	VariousFunctions.ini, 	Menu memory, 	Window Switcher, 		NO
+	IniRead, SetEnglishKeyboardIni, 	VariousFunctions.ini, 	Menu memory, 	Set English Keyboard, 	NO
+	IniRead, AltGrIni, 				VariousFunctions.ini, 	Menu memory, 	AltGr, 				NO
+	IniRead, WindowSwitcherIni, 		VariousFunctions.ini, 	Menu memory, 	Window Switcher, 		NO
 	IniRead, PrintScreenIni, 		VariousFunctions.ini, 	Menu memory, 	Print Screen, 			NO
 	IniRead, CapitalShiftIni, 		VariousFunctions.ini, 	Menu memory,	Capitalize Shift, 		NO
 	IniRead, CapitalCapslIni, 		VariousFunctions.ini, 	Menu memory,	Capitalize Capslock, 	NO
 	IniRead, MicrosoftWordIni, 		VariousFunctions.ini, 	Menu memory,	Microsoft `Word, 		NO
-	IniRead, TotalCommanderIni, 	VariousFunctions.ini, 	Menu memory,	Total Commander, 		NO
-	IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory,	Paint, 					NO
+	IniRead, TotalCommanderIni, 		VariousFunctions.ini, 	Menu memory,	Total Commander, 		NO
+	IniRead, PaintIni, 				VariousFunctions.ini, 	Menu memory,	Paint, 				NO
 	IniRead, RebootIni, 			VariousFunctions.ini, 	Menu memory,	Reboot, 				NO
-	IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory,	Shutdown, 				NO
+	IniRead, ShutdownIni, 			VariousFunctions.ini, 	Menu memory,	Shutdown, 			NO
 	IniRead, TranspIni, 			VariousFunctions.ini, 	Menu memory,	Transparency, 			NO
-	IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory,	F13, 					NO
-	IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory,	F14, 					NO
-	IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory,	F15, 					NO
+	IniRead, F13Ini, 				VariousFunctions.ini, 	Menu memory,	F13, 				NO
+	IniRead, F14Ini, 				VariousFunctions.ini, 	Menu memory,	F14, 				NO
+	IniRead, F15Ini, 				VariousFunctions.ini, 	Menu memory,	F15, 				NO
 	IniRead, TopIni,				VariousFunctions.ini, 	Menu memory,	Always on top,			NO
 	IniRead, KeePassIni,			VariousFunctions.ini, 	Menu memory,	KeePass,				NO
-	IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory,	Hyperlink,				NO
+	IniRead, HyperIni,				VariousFunctions.ini, 	Menu memory,	Hyperlink,			NO
 	IniRead, HideIni,				VariousFunctions.ini, 	Menu memory,	Hidetext,				NO
 	IniRead, ShowIni,				VariousFunctions.ini, 	Menu memory,	Showtext,				NO
-	IniRead, AddTemplateIni,		VariousFunctions.ini, 	Menu memory,	Add Template,			NO
-	IniRead, TemplateOffIni,		VariousFunctions.ini, 	Menu memory,	Template Off,			NO
-	IniRead, StrikethroIni, 		VariousFunctions.ini,   Menu memory,	Strikethrough Text,    	NO
-	IniRead, DeleteLineIni, 		VariousFunctions.ini,   Menu memory,	Delete Line,    		NO
-	IniRead, AlignLeftIni, 			VariousFunctions.ini,   Menu memory,	Align Left,    			NO
-	IniRead, ApplyStyleIni, 		VariousFunctions.ini,   Menu memory,	Apply Styles,    		NO
-	IniRead, OpenPathIni, 			VariousFunctions.ini,   Menu memory,	Open and Show Path,    	NO
-	IniRead, TableIni, 				VariousFunctions.ini,   Menu memory,	Table,    				NO
+	IniRead, AddTemplateIni,			VariousFunctions.ini, 	Menu memory,	Add Template,			NO
+	IniRead, TemplateOffIni,			VariousFunctions.ini, 	Menu memory,	Template Off,			NO
+	IniRead, StrikethroIni, 			VariousFunctions.ini,  	Menu memory,	Strikethrough Text,    	NO
+	IniRead, DeleteLineIni, 			VariousFunctions.ini,   	Menu memory,	Delete Line,    		NO
+	IniRead, AlignLeftIni, 			VariousFunctions.ini,   	Menu memory,	Align Left,    		NO
+	IniRead, ApplyStyleIni, 			VariousFunctions.ini,   	Menu memory,	Apply Styles,    		NO
+	IniRead, OpenPathIni, 			VariousFunctions.ini,   	Menu memory,	Open and Show Path,    	NO
+	IniRead, TableIni, 				VariousFunctions.ini,   	Menu memory,	Table,    			NO
 	IniRead, SuspendIni,			VariousFunctions.ini,	Menu memory,	Suspend,				NO
 	IniRead, VolumeIni,				VariousFunctions.ini,	Menu memory,	Volume Up & Down,		NO
 	IniRead, BroWinSwiIni,			VariousFunctions.ini,	Menu memory,	Browser Win Switcher,	NO
 	IniRead, TranspMouIni, 			VariousFunctions.ini,	Menu memory,	Transparency Mouse,		NO
 	IniRead, AutosaveIni, 			VariousFunctions.ini,	Menu memory,	Autosave,				NO
-	IniRead, ENtoPLini, 			VariousFunctions.ini,	Menu memory,	ENtoPL,					NO
-	IniRead, PLtoENini, 			VariousFunctions.ini,	Menu memory,	PLtoEN,					NO
+	IniRead, ENtoPLini, 			VariousFunctions.ini,	Menu memory,	ENtoPL,				NO
+	IniRead, PLtoENini, 			VariousFunctions.ini,	Menu memory,	PLtoEN,				NO
 	IniRead, AutomatePaintini, 		VariousFunctions.ini,	Menu memory,	AutomatePaint,			NO
-	IniRead, LineUpini,				VariousFunctions.ini,	Menu memory,	LineUp,					NO
+	IniRead, LineUpini,				VariousFunctions.ini,	Menu memory,	LineUp,				NO
 
 	;[OpenTabs]
-	IniRead, URL1  ,				VariousFunctions.ini,	OpenTabs,		Tab1,							
-	IniRead, URL2  ,				VariousFunctions.ini,	OpenTabs,		Tab2,					
-	IniRead, URL3  ,				VariousFunctions.ini,	OpenTabs,		Tab3,					
-	IniRead, URL4  ,				VariousFunctions.ini,	OpenTabs,		Tab4,					
-	IniRead, URL5  ,				VariousFunctions.ini,	OpenTabs,		Tab5,					
-	IniRead, URL6  ,				VariousFunctions.ini,	OpenTabs,		Tab6,					
-	IniRead, URL7  ,				VariousFunctions.ini,	OpenTabs,		Tab7,					
-	IniRead, URL8  ,				VariousFunctions.ini,	OpenTabs,		Tab8,					
-	IniRead, URL9  ,				VariousFunctions.ini,	OpenTabs,		Tab9,					
-	IniRead, URL10 ,				VariousFunctions.ini,	OpenTabs,		Tab10,					
+	IniRead, URL1  ,				VariousFunctions.ini,	OpenTabs,		Tab1											
+	IniRead, URL2  ,				VariousFunctions.ini,	OpenTabs,		Tab2						
+	IniRead, URL3  ,				VariousFunctions.ini,	OpenTabs,		Tab3								
+	IniRead, URL4  ,				VariousFunctions.ini,	OpenTabs,		Tab4									
+	IniRead, URL5  ,				VariousFunctions.ini,	OpenTabs,		Tab5									
+	IniRead, URL6  ,				VariousFunctions.ini,	OpenTabs,		Tab6									
+	IniRead, URL7  ,				VariousFunctions.ini,	OpenTabs,		Tab7									
+	IniRead, URL8  ,				VariousFunctions.ini,	OpenTabs,		Tab8									
+	IniRead, URL9  ,				VariousFunctions.ini,	OpenTabs,		Tab9									
+	IniRead, URL10 ,				VariousFunctions.ini,	OpenTabs,		Tab10									
 	GuiControl, OpenTabs:, Tab1, % URL1
 	GuiControl, OpenTabs:, Tab2, % URL2
 	GuiControl, OpenTabs:, Tab3, % URL3
@@ -2492,6 +2550,14 @@ F_IniRead()
 	GuiControl, OpenTabs:, Tab9, % URL9
 	GuiControl, OpenTabs:, Tab10, % URL10
 	Temp1 := URL1 . A_space . URL2 . A_space . URL3 . A_space . URL4 . A_space . URL5 . A_space . URL6 . A_space . URL7 . A_space . URL8 . A_space . URL9 . A_space . URL10
+
+	;[ChooseBrowser]
+	IniRead, Browser1,				VariousFunctions.ini, ChooseBrowser,		Chrome
+	IniRead, Browser2,				VariousFunctions.ini, ChooseBrowser,		Edge
+	; IniRead, Browser3,				VariousFunctions.ini, ChooseBrowser,		firefox.exe
+	GuiControl, ChooseBrowser:, Chrome, 	% Browser1
+	GuiControl, ChooseBrowser:, Edge, 		% Browser2
+	; GuiControl, ChooseBrowser:, Firefox, 	% Browser3
 }
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2502,7 +2568,7 @@ F_PrepareGuiElements()
 	Gui, Main: New 
 	Gui, Main: Font, s9, Segoe UI
 
-	Gui Main: Add, Picture, 	x8 y8 w47 h47, C:\Repozytoria\companyTemplates\AutoHotKeyScripts\VariousFunctions\vh.ico
+	Gui Main: Add, Picture, 	x8 y8 w47 h47, C:\Repozytoria\AutoHotKey\VariousFunctions\vh.ico
 	Gui Main: Add, Text, 		x96 y16 w91 h15 +0x200 				 , CHOOSE YOUR
 	Gui Main: Add, Text, 		x104 y32 w72 h17 +0x200 			 , FUNCTIONS
 	Gui Main: Add, Button, 	x8 y64 w220 h41 ClassButton gF_About1 , About
@@ -2511,8 +2577,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, 	x24 y120 w170 h23 vCheck1 gF_CB1_AlwaysOnTop, Always on top
 	Switch TopIni
 	{
-		Case "YES": GuiControl, Main:, Check1, 1
-		Case "NO":	GuiControl, Main:, Check1, 0
+		Case "YES": 	GuiControl, Main:, Check1, 1
+		Case "NO"	:	GuiControl, Main:, Check1, 0
 	}
 
 	Gui Main: Add, Button, 	x200 y120 w22 h24 gF_Button1_AlwaysOnTop,	?
@@ -2520,26 +2586,26 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y152 w170 h23 vCheck2 gF_CB2_AutomatePaint, Automate Paint
 	Switch AutomatePaintIni
 	{
-		Case "YES": GuiControl, Main:, Check2, 1
-		Case "NO":	GuiControl, Main:, Check2, 0
+		Case "YES": 	GuiControl, Main:, Check2, 1
+		Case "NO"	:	GuiControl, Main:, Check2, 0
 	}
 
 	Gui Main: Add, Button, x200 y152 w22 h24 gF_Button2_AutomatePaint, ?
 
-	Gui Main:Add, CheckBox, x24 y184 w170 h23 vCheck3 gF_CB3_ChromeTabSwitcher, Chrome tab switcher
+	Gui Main:Add, CheckBox, x24 y184 w170 h23 vCheck3 gF_CB3_ChromeTabSwitcher, Browser tab switcher
 	Switch BroWinSwiIni
 	{
-		Case "YES": GuiControl, Main:, Check3, 1
-		Case "NO":	GuiControl, Main:, Check3, 0
+		Case "YES": 	GuiControl, Main:, Check3, 1
+		Case "NO"	:	GuiControl, Main:, Check3, 0
 	}
 
 	Gui Main: Add, Button, x200 y184 w22 h24 gF_Button3_ChromeTabSwitcher, ?
 
-	Gui Main: Add, CheckBox, x24 y216 w170 h23 vCheck4 gF_CB4_OpenTabs, Open tabs in Chrome
+	Gui Main: Add, CheckBox, x24 y216 w170 h23 vCheck4 gF_CB4_OpenTabs, Open tabs in Browser
 	Switch BrowserIni
 	{
-		Case "YES": GuiControl, Main:, Check4, 1
-		Case "NO":	GuiControl, Main:, Check4, 0
+		Case "YES": 	GuiControl, Main:, Check4, 1
+		Case "NO"	:	GuiControl, Main:, Check4, 0
 	}
 
 	Gui Main: Add, Button, x200 y216 w22 h24 gF_Button4_OpenTabs, ?
@@ -2547,8 +2613,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y248 w170 h23 vCheck5 gF_CB5_ParenthesisWatcher, Parenthesis watcher
 	Switch ParenthesisIni
 	{
-		Case "YES": GuiControl, Main:, Check5, 1
-		Case "NO":	GuiControl, Main:, Check5, 0
+		Case "YES": 	GuiControl, Main:, Check5, 1
+		Case "NO"	:	GuiControl, Main:, Check5, 0
 	}
 
 	Gui Main: Add, Button, x200 y248 w22 h24 gF_Button5_ParenthesisWatcher, ?
@@ -2556,8 +2622,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y280 w170 h23 vCheck6 gF_CB6_USKeyboard, US keybord
 	Switch SetEnglishKeyboardIni
 	{
-		Case "YES": GuiControl, Main:, Check6, 1
-		Case "NO":	GuiControl, Main:, Check6, 0
+		Case "YES": 	GuiControl, Main:, Check6, 1
+		Case "NO"	:	GuiControl, Main:, Check6, 0
 	}
 
 	Gui Main: Add, Button, x200 y280 w22 h24 gF_Button6_USKeyboard, ?
@@ -2565,8 +2631,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y312 w170 h23 vCheck7 gF_CB7_RightClick, Right-click context menu
 	Switch AltGrIni
 	{
-		Case "YES": GuiControl, Main:, Check7, 1
-		Case "NO":	GuiControl, Main:, Check7, 0
+		Case "YES": 	GuiControl, Main:, Check7, 1
+		Case "NO"	:	GuiControl, Main:, Check7, 0
 	}
 
 	Gui Main: Add, Button, x200 y312 w22 h24 gF_Button7_RightClick, ?
@@ -2574,8 +2640,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y344 w170 h23 vCheck8 gF_CB8_VolumeUpDown, Volume Up and Down
 	Switch VolumeIni
 	{
-		Case "YES": GuiControl, Main:, Check8, 1
-		Case "NO":	GuiControl, Main:, Check8, 0
+		Case "YES": 	GuiControl, Main:, Check8, 1
+		Case "NO"	:	GuiControl, Main:, Check8, 0
 	}
 
 	Gui Main: Add, Button, x200 y344 w22 h24 gF_Button8_VolumeUpDown, ?
@@ -2583,8 +2649,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y376 w170 h23 vCheck9 gF_CB9_WindowSwitcher, Window switcher
 	Switch WindowSwitcherIni
 	{
-		Case "YES": GuiControl, Main:, Check9, 1
-		Case "NO":	GuiControl, Main:, Check9, 0
+		Case "YES": 	GuiControl, Main:, Check9, 1
+		Case "NO"	:	GuiControl, Main:, Check9, 0
 	}
 
 	Gui Main: Add, Button, x200 y376 w22 h24 gF_Button9_WindowSwitcher, ?
@@ -2594,8 +2660,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y440 w169 h23 vCheck10 gF_CB10_CAPSLOCK, Capslock
 	Switch CapitalCapsIni
 	{
-		Case "YES": GuiControl, Main:, Check10, 1
-		Case "NO":	GuiControl, Main:, Check10, 0
+		Case "YES": 	GuiControl, Main:, Check10, 1
+		Case "NO"	:	GuiControl, Main:, Check10, 0
 	}
 
 	Gui Main: Add, Button, x200 y440 w22 h24 gF_Button10_CAPSLOCK, ?
@@ -2603,8 +2669,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x24 y472 w169 h23 vCheck11 gF_CB11_SHIFTF3, Shift + F3
 	Switch CapitalShiftIni
 	{
-		Case "YES": GuiControl, Main:, Check11, 1
-		Case "NO":	GuiControl, Main:, Check11, 0
+		Case "YES": 	GuiControl, Main:, Check11, 1
+		Case "NO"	:	GuiControl, Main:, Check11, 0
 	}
 
 	Gui Main: Add, Button, x200 y472 w22 h24 gF_Button11_SHIFTF3, ?
@@ -2614,8 +2680,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y56 w129 h23 vCheck12 gF_CB12_FootswitchF13, F13
 	Switch F13Ini
 	{
-		Case "YES": GuiControl, Main:, Check12, 1
-		Case "NO":	GuiControl, Main:, Check12, 0
+		Case "YES": 	GuiControl, Main:, Check12, 1
+		Case "NO"	:	GuiControl, Main:, Check12, 0
 	}
 
 	Gui Main: Add, Button, x392 y56 w22 h24 gF_Button12_FootswitchF13, ?
@@ -2623,8 +2689,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y88 w129 h23 vCheck13 gF_CB13_FootswitchF14, F14
 	Switch F14Ini
 	{
-		Case "YES": GuiControl, Main:, Check13, 1
-		Case "NO":	GuiControl, Main:, Check13, 0
+		Case "YES": 	GuiControl, Main:, Check13, 1
+		Case "NO"	:	GuiControl, Main:, Check13, 0
 	}
 
 	Gui Main: Add, Button, x392 y88 w22 h24 gF_Button13_FootswitchF14, ?
@@ -2632,8 +2698,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y120 w129 h23 vCheck14 gF_CB14_FootswitchF15, F15
 	Switch F15Ini
 	{
-		Case "YES": GuiControl, Main:, Check14, 1
-		Case "NO":	GuiControl, Main:, Check14, 0
+		Case "YES": 	GuiControl, Main:, Check14, 1
+		Case "NO"	:	GuiControl, Main:, Check14, 0
 	}
 
 	Gui Main: Add, Button, x392 y120 w22 h24 gF_Button14_FootswitchF15, ?
@@ -2643,8 +2709,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y192 w129 h23 vCheck15 gF_CB15_TranslateEN_PL, English → Polish
 	Switch ENtoPLIni
 	{
-		Case "YES": GuiControl, Main:, Check15, 1
-		Case "NO":	GuiControl, Main:, Check15, 0
+		Case "YES": 	GuiControl, Main:, Check15, 1
+		Case "NO"	:	GuiControl, Main:, Check15, 0
 	}
 
 	Gui Main: Add, Button, x392 y192 w22 h24 gF_Button15_TranslateEN_PL, ?
@@ -2652,8 +2718,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y224 w129 h23 vCheck16 gF_CB16_TranslatePL_EN, Polish → English
 	Switch PLtoENIni
 	{
-		Case "YES": GuiControl, Main:, Check16, 1
-		Case "NO":	GuiControl, Main:, Check16, 0
+		Case "YES": 	GuiControl, Main:, Check16, 1
+		Case "NO"	:	GuiControl, Main:, Check16, 0
 	} 
 
 	Gui Main: Add, Button, x392 y224 w22 h24 gF_Button16_TranslatePL_EN, ?
@@ -2663,8 +2729,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y312 w129 h23 vCheck17 gF_CB17_Suspend, Suspend
 	Switch SuspendIni
 	{
-		Case "YES": GuiControl, Main:, Check17, 1
-		Case "NO":	GuiControl, Main:, Check17, 0
+		Case "YES": 	GuiControl, Main:, Check17, 1
+		Case "NO"	:	GuiControl, Main:, Check17, 0
 	} 
 
 	Gui Main: Add, Button, x392 y312 w22 h24 gF_Button17_Suspend, ?
@@ -2672,8 +2738,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y344 w129 h23 vCheck18 gF_CB18_Reboot, Reboot
 	Switch RebootIni
 	{
-		Case "YES": GuiControl, Main:, Check18, 1
-		Case "NO":	GuiControl, Main:, Check18, 0
+		Case "YES": 	GuiControl, Main:, Check18, 1
+		Case "NO"	:	GuiControl, Main:, Check18, 0
 	} 
 
 	Gui Main: Add, Button, x392 y344 w22 h24 gF_Button18_Reboot, ?
@@ -2681,8 +2747,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y376 w129 h23 vCheck19 gF_CB19_Shutdown, Shutdown
 	Switch ShutdownIni
 	{
-		Case "YES": GuiControl, Main:, Check19, 1
-		Case "NO":	GuiControl, Main:, Check19, 0
+		Case "YES": 	GuiControl, Main:, Check19, 1
+		Case "NO"	:	GuiControl, Main:, Check19, 0
 	} 
 
 	Gui Main: Add, Button, x392 y376 w22 h24 gF_Button19_Shutdown, ?
@@ -2692,8 +2758,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y440 w131 h23 vCheck20 gF_CB20_TransparencyMouse, Mouse
 	Switch TransparencyMouIni
 	{
-		Case "YES": GuiControl, Main:, Check20, 1
-		Case "NO":	GuiControl, Main:, Check20, 0
+		Case "YES": 	GuiControl, Main:, Check20, 1
+		Case "NO"	:	GuiControl, Main:, Check20, 0
 	} 
 
 	Gui Main: Add, Button, x392 y440 w22 h24 gF_Button20_TransparencyMouse, ?
@@ -2701,8 +2767,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x256 y472 w130 h23 vCheck21 gF_CB21_TransparencyKeys, Keys
 	Switch TransparencyIni
 	{
-		Case "YES": GuiControl, Main:, Check21, 1
-		Case "NO":	GuiControl, Main:, Check21, 0
+		Case "YES": 	GuiControl, Main:, Check21, 1
+		Case "NO"	:	GuiControl, Main:, Check21, 0
 	} 
 
 	Gui Main: Add, Button, x392 y472 w22 h24 gF_Button21_TransparencyKeys, ?
@@ -2712,8 +2778,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y56 w138 h23 vCheck22 gF_CB22_AlignLeft, Align Left
 	Switch AlignLeftIni
 	{
-		Case "YES": GuiControl, Main:, Check22, 1
-		Case "NO":	GuiControl, Main:, Check22, 0
+		Case "YES": 	GuiControl, Main:, Check22, 1
+		Case "NO"	:	GuiControl, Main:, Check22, 0
 	}
 
 	Gui Main: Add, Button, x584 y56 w22 h24 gF_Button22_AlignLeft, ?  
@@ -2721,8 +2787,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y88 w138 h23 vCheck23 gF_CB23_ApplyStyles, Apply styles
 	Switch ApplyStyleIni
 	{
-		Case "YES": GuiControl, Main:, Check23, 1
-		Case "NO":	GuiControl, Main:, Check23, 0
+		Case "YES": 	GuiControl, Main:, Check23, 1
+		Case "NO"	:	GuiControl, Main:, Check23, 0
 	} 
 
 	Gui Main: Add, Button, x584 y88 w22 h24 gF_Button23_ApplyStyles, ?
@@ -2730,8 +2796,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y120 w138 h23 vCheck24 gF_CB24_Autosave, Autosave
 	Switch AutosaveIni
 	{
-		Case "YES": GuiControl, Main:, Check24, 1
-		Case "NO":	GuiControl, Main:, Check24, 0
+		Case "YES": 	GuiControl, Main:, Check24, 1
+		Case "NO"	:	GuiControl, Main:, Check24, 0
 	} 
 
 	Gui Main: Add, Button, x584 y120 w22 h24 gF_Button24_Autosave, ?
@@ -2739,8 +2805,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y152 w138 h23 vCheck25 gF_CB25_DeleteLine, Delete Line
 	Switch DeleteLineIni
 	{
-		Case "YES": GuiControl, Main:, Check25, 1
-		Case "NO":	GuiControl, Main:, Check25, 0
+		Case "YES": 	GuiControl, Main:, Check25, 1
+		Case "NO"	:	GuiControl, Main:, Check25, 0
 	} 
 
 	Gui Main: Add, Button, x584 y152 w22 h24 gF_Button25_DeleteLine, ?
@@ -2750,8 +2816,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y184 w138 h23 vCheck26 gF_CB26_Hide, Hide text
 	Switch HideIni
 	{
-		Case "YES": GuiControl, Main:, Check26, 1
-		Case "NO":	GuiControl, Main:, Check26, 0
+		Case "YES": 	GuiControl, Main:, Check26, 1
+		Case "NO"	:	GuiControl, Main:, Check26, 0
 	} 
 
 	Gui Main: Add, Button, x584 y184 w22 h24 gF_Button26_Hide, ?
@@ -2759,8 +2825,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y216 w138 h23 vCheck27 gF_CB27_Show, Show hidden text
 	Switch ShowIni
 	{
-		Case "YES": GuiControl, Main:, Check27, 1
-		Case "NO":	GuiControl, Main:, Check27, 0
+		Case "YES": 	GuiControl, Main:, Check27, 1
+		Case "NO"	:	GuiControl, Main:, Check27, 0
 	}  
 
 	Gui Main: Add, Button, x584 y216 w22 h24 gF_Button27_Show, ?
@@ -2768,8 +2834,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y248 w138 h23 vCheck39 gF_CB39_LineUp, Line up and down
 	Switch LineUpIni
 	{
-		Case "YES": GuiControl, Main:, Check39, 1
-		Case "NO":	GuiControl, Main:, Check39, 0
+		Case "YES": 	GuiControl, Main:, Check39, 1
+		Case "NO"	:	GuiControl, Main:, Check39, 0
 	}  
 
 	Gui Main: Add, Button, x584 y248 w22 h24 gF_Button39_LineUp, ?
@@ -2777,8 +2843,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y280 w138 h23 vCheck28 gF_CB28_Hyperlink, Hyperlink
 	Switch HyperIni
 	{
-		Case "YES": GuiControl, Main:, Check28, 1
-		Case "NO":	GuiControl, Main:, Check28, 0
+		Case "YES": 	GuiControl, Main:, Check28, 1
+		Case "NO"	:	GuiControl, Main:, Check28, 0
 	} 
 
 	Gui Main: Add, Button, x584 y280 w22 h24 gF_Button28_Hyperlink, ?
@@ -2786,8 +2852,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y312 w138 h23 vCheck29 gF_CB29_OpenAndShowPath, Open and show path
 	Switch OpenPathIni
 	{
-		Case "YES": GuiControl, Main:, Check29, 1
-		Case "NO":	GuiControl, Main:, Check29, 0
+		Case "YES": 	GuiControl, Main:, Check29, 1
+		Case "NO"	:	GuiControl, Main:, Check29, 0
 	} 
 
 	Gui Main: Add, Button, x584 y312 w22 h24 gF_Button29_OpenAndShowPath, ?
@@ -2795,8 +2861,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y344 w138 h23 vCheck30 gF_CB30_StrikethroughText, Strikethrough text
 	Switch OpenPathIni
 	{
-		Case "YES": GuiControl, Main:, Check30, 1
-		Case "NO":	GuiControl, Main:, Check30, 0
+		Case "YES": 	GuiControl, Main:, Check30, 1
+		Case "NO"	:	GuiControl, Main:, Check30, 0
 	} 
 
 	Gui Main: Add, Button, x584 y344 w22 h24 gF_Button30_StrikethroughText, ?
@@ -2804,8 +2870,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x440 y376 w138 h23 vCheck31 gF_CB31_Table, Table
 	Switch TableIni
 	{
-		Case "YES": GuiControl, Main:, Check31, 1
-		Case "NO":	GuiControl, Main:, Check31, 0
+		Case "YES": 	GuiControl, Main:, Check31, 1
+		Case "NO"	:	GuiControl, Main:, Check31, 0
 	} 
 
 	Gui Main: Add, Button, x584 y376 w22 h24 gF_Button31_Table, ?
@@ -2815,8 +2881,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x480 y440 w100 h24 vCheck32 gF_CB32_AddTemplate, Add template
 	Switch AddTemplateIni
 	{
-		Case "YES": GuiControl, Main:, Check32, 1
-		Case "NO":	GuiControl, Main:, Check32, 0
+		Case "YES": 	GuiControl, Main:, Check32, 1
+		Case "NO"	:	GuiControl, Main:, Check32, 0
 	} 
 
 	Gui Main: Add, Button, x584 y440 w22 h24 gF_Button32_AddTemplate, ?
@@ -2824,8 +2890,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x480 y472 w102 h24 vCheck33 gF_CB33_TemplateOff, Template Off
 	Switch TemplateOffIni
 	{
-		Case "YES": GuiControl, Main:, Check33, 1
-		Case "NO":	GuiControl, Main:, Check33, 0
+		Case "YES": 	GuiControl, Main:, Check33, 1
+		Case "NO"	:	GuiControl, Main:, Check33, 0
 	} 
 
 	Gui Main: Add, Button, x584 y472 w22 h24 gF_Button33_TemplateOff, ?    
@@ -2835,8 +2901,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x648 y56 w138 h23 vCheck34 gF_CB34_KeePass, KeePass
 	Switch KeePassIni
 	{
-		Case "YES": GuiControl, Main:, Check34, 1
-		Case "NO":	GuiControl, Main:, Check34, 0
+		Case "YES": 	GuiControl, Main:, Check34, 1
+		Case "NO"	:	GuiControl, Main:, Check34, 0
 	} 
 
 	Gui Main: Add, Button, x792 y56 w22 h24 gF_Button34_KeePass, ?
@@ -2844,8 +2910,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x648 y88 w138 h23 vCheck35 gF_CB35_MSWord, MS Word
 	Switch MicrosoftWordIni
 	{
-		Case "YES": GuiControl, Main:, Check35, 1
-		Case "NO":	GuiControl, Main:, Check35, 0
+		Case "YES": 	GuiControl, Main:, Check35, 1
+		Case "NO"	:	GuiControl, Main:, Check35, 0
 	} 
 
 	Gui Main: Add, Button, x792 y88 w22 h24 gF_Button35_MSWord, ?
@@ -2853,8 +2919,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x648 y120 w138 h24 vCheck36 gF_CB36_Paint, Paint
 	Switch PaintIni
 	{
-		Case "YES": GuiControl, Main:, Check36, 1
-		Case "NO":	GuiControl, Main:, Check36, 0
+		Case "YES": 	GuiControl, Main:, Check36, 1
+		Case "NO"	:	GuiControl, Main:, Check36, 0
 	} 
 
 	Gui Main: Add, Button, x792 y120 w22 h24 gF_Button36_Paint, ?
@@ -2862,8 +2928,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x648 y152 w138 h24 vCheck37 gF_CB37_TotalCommander, Total Commander
 	Switch TotalCommanderIni
 	{
-		Case "YES": GuiControl, Main:, Check37, 1
-		Case "NO":	GuiControl, Main:, Check37, 0
+		Case "YES":	GuiControl, Main:, Check37, 1
+		Case "NO"	:	GuiControl, Main:, Check37, 0
 	} 
 
 	Gui Main: Add, Button, x792 y152 w22 h24 gF_Button37_TotalCommander, ?
@@ -2871,8 +2937,8 @@ F_PrepareGuiElements()
 	Gui Main: Add, CheckBox, x648 y184 w138 h23 vCheck38 gF_CB38_PrintScreen, Print Screen
 	Switch PrintScreenIni
 	{
-		Case "YES": GuiControl, Main:, Check38, 1
-		Case "NO":	GuiControl, Main:, Check38, 0
+		Case "YES":	GuiControl, Main:, Check38, 1
+		Case "NO"	:	GuiControl, Main:, Check38, 0
 	} 
 
 	Gui Main: Add, Button, x792 y184 w22 h24 gF_Button38_PrintScreen, ?
@@ -2880,6 +2946,16 @@ F_PrepareGuiElements()
 }
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - 
+F_PrepareChooseBrowserGui()
+{
+	global	;assume-global mode of operation
+	Gui, ChooseBrowser: New 
+	Gui, ChooseBrowser: Font, s9, Segoe UI
+	Gui, ChooseBrowser: Add, Radio, vF_Chrome,	Chrome
+	Gui, ChooseBrowser: Add, Radio, vF_Edge, 	Edge
+	; Gui, ChooseBrowser: Add, Radio, vF_Firefox, Firefox 
+	Gui, ChooseBrowser: Add, Button, gF_SaveBrowser , &SAVE	
+}
 
 F_PrepareOpenTabsGui()
 {
