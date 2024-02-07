@@ -775,6 +775,7 @@ F_windowswitch()
 {
 	Critical, On
 	Send, {Ctrl Down}{LAlt Down}{Tab}
+	Sleep, 100	;added additional delay as sometimes windows do not switch quick enough
 	Send, {Blind}{LAlt Up}{Ctrl Up}
 	Critical, Off
 }
